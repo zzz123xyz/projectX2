@@ -1,4 +1,4 @@
-function [C, Y, obj_value, data] = cl_mg_v2(data, nbclusters, varargin)
+function [C, Y, obj_value, data, F_v] = cl_mg_v2(data, nbclusters, varargin)
 %
 % spcl(data, nbclusters, varargin) is a spectral clustering function to
 % assemble random unknown data into clusters. after specifying the data and
@@ -225,99 +225,6 @@ while in_count <= 20
     elseif obj_value(in_count) - tmp_rec < 0.00001*tmp_rec && obj_value(in_count) - tmp_rec > 0 
         break;
     end
-    
-    
-%     if in_count == 1
-%         tmp_rec = obj_value(in_count);
-%         in_count = in_count + 1;
-%     elseif in_count>1 && obj_value(in_count) - tmp_rec > 0.001*tmp_rec     
-%         tmp_rec = obj_value(in_count);
-%         in_count = in_count + 1;
-%     elseif obj_value(in_count) - tmp_rec < 0.001*tmp_rec && obj_value(in_count) - tmp_rec > 0 
-%         break;
-%     end
+
 end
 
-    %         B = Y*C(dim_V_ind1(v):dim_V_ind2(v),:)';
-    %         [F_v, ~] = GPI(A_norm, B, eta/alpha(v));
-    %
-    %         nv(v) = trace(F_v'*A_norm*F_v);
-    %
-    %         data_new{v} = F_v;
-
-    
-    
-    
-%     % fix F and alpha calculate Y and C
-%     [idx, C, ~, kmeans_dist] = kmeans(X, nbclusters);
-%     
-%     kmeans_likelihood = 1./kmeans_dist;
-%     temp1 = repmat(sum(kmeans_likelihood'),[nbclusters,1]);
-%     F0 = kmeans_likelihood./temp1';  %compute the how likely xi belongs to the j-th cluster
-%     
-%     C = C';
-%     Y = zeros(n, nbclusters);
-%     
-%     for i = 1:n
-%         Y(i,idx(i)) = 1;
-%     end
-%     
-%     
-%     
-%     % fix Y and C calculate F and alpha
-%     
-%     % fix F calculate alpha
-%     lambda = norm(nv);
-%     alpha = alpha./lambda;
-%     data = data_new;
-%     F = cell2mat(data);
-%     
-%     % calculate obj_value
-%     tmp = 0;
-%     for v = 1:V
-%         tmp = tmp + alpha(v)*trace(data{v}'*A_norm*data{v});
-%     end
-%     obj_value(i) = tmp + eta * norm(F - Y*C')^2;
-    
-
-
-% %results display
-% figure;
-% [Y_ind,~,~] = find(Y');
-% for i = 1: nbclusters   
-%     points = data(Y_ind == i, :);
-%     plot(points(:,1), points(:,2), plotchoices{i});
-%     hold on;
-% end
-
-
-
-
-
-% [evectors, evalues] = eig(laplacian);
-% 
-% newspace = evectors(:, eigv(1,1): eigv(1,2));
-% n = size(eigv);
-% for i = 2: n(1)
-%     
-%     newspace = [newspace evectors(:, eigv(i,1): eigv(i,2))];
-% end
-% 
-% if(strcmp(clusteralgo, 'kmean'))
-%     
-%     clusters = kmeans(newspace, nbclusters);
-% else
-%     clusters = 1 + (newspace > 0);
-% end
-% 
-% if(dim == 2)
-%     figure;
-%     for i = 1: nbclusters
-% 
-%         points = data(clusters == i, :);
-%         plot(points(:,1), points(:,2), plotchoices{i});
-%         hold on;
-%     end
-%     title('clustered data using spectral clustering');
-%     grid on;
-% end
