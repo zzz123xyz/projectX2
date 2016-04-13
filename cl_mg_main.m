@@ -6,7 +6,7 @@ addpath('..\NCestimation_V2');
 addpath('..\gadget');
 addpath('..\Project_X\code')
 
-dataset_name = 'MSRCV1'; %'AWA','MSRCV1'
+dataset_name = 'ApAy'; %'AWA','MSRCV1'
 
 %circlesdata; data = data'; %load test double moon data
 %gaussiandata
@@ -16,6 +16,8 @@ dataset_name = 'MSRCV1'; %'AWA','MSRCV1'
 switch dataset_name
     case 'MSRCV1'
         [label_ind,~,~] = find(label'); %change label matrix into column
+    case 'ApAy'
+        label_ind = label;
     case 'AWA'
         label_ind = label;
 end
@@ -39,7 +41,7 @@ disp(RI);
 disp(MIhat);
 
 %[C, obj_value, data_clustered] = cl_mg(data, nbclusters, {sigma, sigma, epsilon}, 'sym', 'kmean', [1 28]); %***
-[C, Y, obj_value, data_clustered] = cl_mg_v2(data, nbclusters, {sigma, sigma, epsilon}, 'sym', 'kmean', eigv); %***
+[C, Y, obj_value, data_clustered] = cl_mg_v2(data, nbclusters, {sigma, sigma, epsilon}, 'sym', algochoices, eigv); %***
 [Y_ind,~,~] = find(Y');  %change label matrix into column
 
 %evaluation

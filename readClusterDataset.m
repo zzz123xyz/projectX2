@@ -41,7 +41,18 @@ switch dataset_name
          k = numel(X_train);
          for i = 1:k
             X0{i} = [X_train{i},X_test{i}];
-        end
+         end
+        
+    case 'ApAy'
+        [~, ~, Ytrn, Ytst] = ReadDataSetApAy;
+        comp_data_file = ['../computed_data/feat_reduce_',dataset_name,'.mat'];
+        load(comp_data_file);
+        X_train = {feat_trn_red'};
+        X_test = {feat_tst_red'};
+         k = numel(X_train);
+         for i = 1:k
+            X0{i} = [X_train{i};X_test{i}];
+         end
 end
 
 %% ------------normalization-----------
