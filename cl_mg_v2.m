@@ -37,7 +37,8 @@ function [C_f, Y_f, obj_value, F_vf] = cl_mg_v2(data, nbclusters, varargin)
         
 %[d,n] = size(data);          
 
-niters = 25;
+niters = 50;
+in_iters = 9; %increase iters
 plotchoices = {'bo','r+','md','k*','wv'};
 lapmatrixchoices = {'unormalized', 'sym', 'rw'};
 algochoices = {'np', 'kmean'};
@@ -135,8 +136,8 @@ for v = 1:V
             
         case 'knn'
             Type = 1; %Type = 1 normal, Type = 2 mutual
-            k = 10; %number of neighborhood
-            wmat = full(KnnGraph(X, k, Type, params{v}));
+            k = params{v}(1); %number of neighborhood
+            wmat = full(KnnGraph(X, k, Type, params{v}(2)));
             %[n,d]=knnsearch(x,y,'k',10,'distance','minkowski','p',5);
             
         case 'eps_neighbor'
@@ -164,12 +165,22 @@ for v = 1:V
             A_norm{v} = (dmat^-1) * wmat;
     end
 
-    [U,S,~] = svd(A_norm{v}, 'econ');
+    [U_,S,~] = svd(A_norm{v}, 'econ');
     %F_v{v} = U(:,  end-eigv(1,2): end-eigv(1,1));
     %[U,~,V] = svd(M,'econ');
     %F_v{v} = U(:,  end-eigv(1,2)+1: end);
-    F_v{v} = U(:,  eigv(1,1)+1: eigv(1,2)+1);
+    %F_v{v} = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
+    U = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
+    
+    % Normalize each row to be of unit length
+    sq_sum = sqrt(sum(U.*U, 2)) + 1e-20;
+    F_v{v} = U ./ repmat(sq_sum, 1, nbclusters);
 end
+
+%???
+% % Normalize each row to be of unit length
+% sq_sum = sqrt(sum(V.*V, 2)) + 1e-20;
+% U = V ./ repmat(sq_sum, 1, num_clusters);
 
 % % online tuning
 %     [U,S,~] = svd(A_norm{1}, 'econ');
@@ -234,7 +245,7 @@ while count <= niters
         in_count = in_count + 1; %in_count means increasing count
     end
     
-    if in_count > 6
+    if in_count > in_iters
        break; 
     end
     

@@ -116,14 +116,19 @@ end
 % [evectors, evalues] = eigs(laplacian, eigv(1,2), diff);
 
 diff   = 0;
-[evectors, evalues] = eigs(laplacian, eigv(1,2), 0);
-newspace = evectors;
+[evectors, evalues] = eigs(laplacian, eigv(1,2)+1, 'sm');
+newspace = evectors(:,2:end);
 
 n = size(eigv);
 for i = 2: n(1)  %for matrix case select which eigen vectors to construct the new space
                  % if the varible eigv is a vector that is more than 2 dims
     newspace = [newspace evectors(:, eigv(i,1): eigv(i,2))];
 end
+
+% Normalize each row to be of unit length
+sq_sum = sqrt(sum(newspace.*newspace, 2)) + 1e-20;
+newspace = newspace ./ repmat(sq_sum, 1, nbclusters);
+clear sq_sum V;
 
 if(strcmp(clusteralgo, 'kmean'))
     
