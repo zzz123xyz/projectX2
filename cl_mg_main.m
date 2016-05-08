@@ -25,9 +25,9 @@ end
 nbclusters = 7;  %nbclusters = 2, 7
 func = 'gaussdist';
 algochoices = 'kmean';
-k = 5;
-sigma = 1000; 
-epsilon = 3000;
+k = 20;
+sigma = 3000; 
+epsilon = 1000;
 gamma1 = 1;
 gamma2 = 1;
 eigv = [1 nbclusters]; %eigv = [1 28], [2 2], [1 nbclusters];
