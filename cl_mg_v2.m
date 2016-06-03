@@ -1,10 +1,9 @@
-function [C, Y, obj_value, data] = cl_mg_v2(data, nbclusters, varargin)
+function [C_f, Y_f, obj_value, F_vf] = cl_mg_v2(data, nbclusters, varargin)
+% cl_mg_v2(data, nbclusters, varargin) is the second version of clustering 
+% algorithm iva multi-graph joint learning.
 %
-% spcl(data, nbclusters, varargin) is a spectral clustering function to
-% assemble random unknown data into clusters. after specifying the data and
-% the number of clusters, next parameters can vary as wanted. This function
-% will construct the fully connected similarity graph of the data.
-%
+% The first augument is data representation R_{d \times n}
+
 % The first parameter of varargin is the name of the function to use.
 %
 % The second is the parameter to pass to the function.
@@ -30,20 +29,22 @@ function [C, Y, obj_value, data] = cl_mg_v2(data, nbclusters, varargin)
 % dmat \in R^{N*N} D in draft
 
 %c is the number of clusters, d is dim of feature, n is number of samples
-% F \in R^{d*n}
-% Y \in R^{d*k}
-% C \in {0,1}^{n*k}
+% F \in R^{n*d}
+% Y \in {0,1}^{n*k}
+% C \in R^{k*d}
 %% ----------------------
         
 %[d,n] = size(data);          
-data = data'; 
 
+niters = 50;
+in_iters = 9; %increase iters
 plotchoices = {'bo','r+','md','k*','wv'};
 lapmatrixchoices = {'unormalized', 'sym', 'rw'};
 algochoices = {'np', 'kmean'};
-func = {'gaussdist','knn','eps_neighbor'};
+func = {'gaussdist','knn','eps_neighbor','CLR'};
+    % = {'gaussdist','knn','eps_neighbor','CLR'};
 V = numel(func); % number of graphs from data (may need to put this part into graph section later)
-eta = 1; %a fixed para
+eta = 0.01; %a fixed para
 alpha = ones(V, 1); %initial condition
 %niters = 100;
 %obj_value = zeros(1,niters); 
@@ -51,10 +52,11 @@ alpha = ones(V, 1); %initial condition
 count = 1;
 
 if iscell(data)
+    data = data'; 
     X = cell2mat(data)'; % concatenated data
     % data: original split data type
-    [~, n_vec] = cellfun(@size, data);
-    n = n_vec(1);
+    [~, ndata_vec] = cellfun(@size, data);
+    n = ndata_vec(1);
 else
     X = data;
     n = size(data,1);
@@ -134,12 +136,15 @@ for v = 1:V
             
         case 'knn'
             Type = 1; %Type = 1 normal, Type = 2 mutual
-            k = 10; %number of neighborhood
-            wmat = full(KnnGraph(X, k, Type, params{v}));
+            k = params{v}(1); %number of neighborhood
+            wmat = full(KnnGraph(X, k, Type, params{v}(2)));
             %[n,d]=knnsearch(x,y,'k',10,'distance','minkowski','p',5);
             
         case 'eps_neighbor'
             wmat = full(SimGraph_Epsilon(X, params{v}));
+            
+        case 'CLR'
+            [~, wmat] = CLR_main(X, nbclusters, params{v});
             
         case 'chi_square' % problem here !!!
             for i = 1: nbsamples - 1
@@ -163,13 +168,31 @@ for v = 1:V
             A_norm{v} = (dmat^-1) * wmat;
     end
 
-    [U,S,~] = svd(A_norm{v}, 'econ');
-    %F_v{v} = U(:,  end-eigv(1,2): end-eigv(1,1));
-    %[U,~,V] = svd(M,'econ');
-    %F_v{v} = U(:,  end-eigv(1,2)+1: end);
-    F_v{v} = U(:,  eigv(1,1): eigv(1,2));
+    [U_,S,~] = svd(A_norm{v}, 'econ');
+    
+    % Unormalize on each row
+    U = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
+    F_v{v} = U;
+    
+%     % Normalize each row to be of unit length
+%     
+%     sq_sum = sqrt(sum(U.*U, 2)) + 1e-20;
+%     F_v{v} = U ./ repmat(sq_sum, 1, nbclusters);
 end
 
+%???
+% % Normalize each row to be of unit length
+% sq_sum = sqrt(sum(V.*V, 2)) + 1e-20;
+% U = V ./ repmat(sq_sum, 1, num_clusters);
+
+% % online tuning
+%     [U,S,~] = svd(A_norm{1}, 'econ');
+%     %F_v{v} = U(:,  end-eigv(1,2): end-eigv(1,1));
+%     %[U,~,V] = svd(M,'econ');
+%     %F_v{v} = U(:,  end-eigv(1,2)+1: end);
+%     F_v{1} = U(:,  eigv(1,1)+1: eigv(1,2)+1);
+% %%%%
+    
 tmp = 0;
 [~, dim_V] = cellfun(@size, F_v');
 for i = 1:V  % number of graphs from data (may need to put this part into graph section later)
@@ -179,9 +202,10 @@ end
 dim_V_ind1 = [1,dim_sum(1:V-1)+1];
 dim_V_ind2 = [dim_sum(1:V-1),dim_sum(V)];
     
-tmp_rec = 0;
-in_count = 1;
-while in_count <= 20
+max_rec = -inf;
+count = 1;
+in_count = 0;
+while count <= niters
 % fix F and alpha
     F_a = cell2mat(F_v);
     [idx, C] = kmeans(F_a, nbclusters); %change the dim of C into C_v (cluster according to each graph)
@@ -209,115 +233,28 @@ while in_count <= 20
         %B,use all feature to do kmeans cluster or sperate each feature.
      end
     
-     % calculate obj_value
+% calculate obj_value
     tmp = 0;
     for v = 1:V
         tmp = tmp + alpha(v)*trace(F_v{v}'*A_norm{v}*F_v{v});
     end
-    obj_value(in_count) = tmp - eta * norm(cell2mat(F_v) - Y*C, 'fro')^2;
+    obj_value(count) = tmp - eta * norm(cell2mat(F_v) - Y*C, 'fro')^2;
     
-    if in_count == 1
-        tmp_rec = obj_value(in_count);
-        in_count = in_count + 1;
-    elseif in_count>1 && obj_value(in_count) - tmp_rec > 0.00001*tmp_rec     
-        tmp_rec = obj_value(in_count);
-        in_count = in_count + 1;
-    elseif obj_value(in_count) - tmp_rec < 0.00001*tmp_rec && obj_value(in_count) - tmp_rec > 0 
-        break;
+    if obj_value(count) > max_rec
+        max_rec = obj_value(count);
+        F_vf = F_v; % here _f means final out put value
+        C_f = C;
+        Y_f = Y;
+        in_count = in_count + 1; %in_count means increasing count
     end
     
+    if in_count > in_iters
+       break; 
+    end
     
-%     if in_count == 1
-%         tmp_rec = obj_value(in_count);
-%         in_count = in_count + 1;
-%     elseif in_count>1 && obj_value(in_count) - tmp_rec > 0.001*tmp_rec     
-%         tmp_rec = obj_value(in_count);
-%         in_count = in_count + 1;
-%     elseif obj_value(in_count) - tmp_rec < 0.001*tmp_rec && obj_value(in_count) - tmp_rec > 0 
-%         break;
-%     end
+    disp('iters:');
+    disp(count);
+    count = count + 1;
+    
 end
 
-    %         B = Y*C(dim_V_ind1(v):dim_V_ind2(v),:)';
-    %         [F_v, ~] = GPI(A_norm, B, eta/alpha(v));
-    %
-    %         nv(v) = trace(F_v'*A_norm*F_v);
-    %
-    %         data_new{v} = F_v;
-
-    
-    
-    
-%     % fix F and alpha calculate Y and C
-%     [idx, C, ~, kmeans_dist] = kmeans(X, nbclusters);
-%     
-%     kmeans_likelihood = 1./kmeans_dist;
-%     temp1 = repmat(sum(kmeans_likelihood'),[nbclusters,1]);
-%     F0 = kmeans_likelihood./temp1';  %compute the how likely xi belongs to the j-th cluster
-%     
-%     C = C';
-%     Y = zeros(n, nbclusters);
-%     
-%     for i = 1:n
-%         Y(i,idx(i)) = 1;
-%     end
-%     
-%     
-%     
-%     % fix Y and C calculate F and alpha
-%     
-%     % fix F calculate alpha
-%     lambda = norm(nv);
-%     alpha = alpha./lambda;
-%     data = data_new;
-%     F = cell2mat(data);
-%     
-%     % calculate obj_value
-%     tmp = 0;
-%     for v = 1:V
-%         tmp = tmp + alpha(v)*trace(data{v}'*A_norm*data{v});
-%     end
-%     obj_value(i) = tmp + eta * norm(F - Y*C')^2;
-    
-
-
-% %results display
-% figure;
-% [Y_ind,~,~] = find(Y');
-% for i = 1: nbclusters   
-%     points = data(Y_ind == i, :);
-%     plot(points(:,1), points(:,2), plotchoices{i});
-%     hold on;
-% end
-
-
-
-
-
-% [evectors, evalues] = eig(laplacian);
-% 
-% newspace = evectors(:, eigv(1,1): eigv(1,2));
-% n = size(eigv);
-% for i = 2: n(1)
-%     
-%     newspace = [newspace evectors(:, eigv(i,1): eigv(i,2))];
-% end
-% 
-% if(strcmp(clusteralgo, 'kmean'))
-%     
-%     clusters = kmeans(newspace, nbclusters);
-% else
-%     clusters = 1 + (newspace > 0);
-% end
-% 
-% if(dim == 2)
-%     figure;
-%     for i = 1: nbclusters
-% 
-%         points = data(clusters == i, :);
-%         plot(points(:,1), points(:,2), plotchoices{i});
-%         hold on;
-%     end
-%     title('clustered data using spectral clustering');
-%     grid on;
-% end
