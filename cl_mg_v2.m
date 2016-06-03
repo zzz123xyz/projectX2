@@ -1,10 +1,9 @@
 function [C_f, Y_f, obj_value, F_vf] = cl_mg_v2(data, nbclusters, varargin)
+% cl_mg_v2(data, nbclusters, varargin) is the second version of clustering 
+% algorithm iva multi-graph joint learning.
 %
-% spcl(data, nbclusters, varargin) is a spectral clustering function to
-% assemble random unknown data into clusters. after specifying the data and
-% the number of clusters, next parameters can vary as wanted. This function
-% will construct the fully connected similarity graph of the data.
-%
+% The first augument is data representation R_{d \times n}
+
 % The first parameter of varargin is the name of the function to use.
 %
 % The second is the parameter to pass to the function.
@@ -42,9 +41,10 @@ in_iters = 9; %increase iters
 plotchoices = {'bo','r+','md','k*','wv'};
 lapmatrixchoices = {'unormalized', 'sym', 'rw'};
 algochoices = {'np', 'kmean'};
-func = {'gaussdist','knn','eps_neighbor'};
+func = {'gaussdist','knn','eps_neighbor','CLR'};
+    % = {'gaussdist','knn','eps_neighbor','CLR'};
 V = numel(func); % number of graphs from data (may need to put this part into graph section later)
-eta = 1; %a fixed para
+eta = 0.01; %a fixed para
 alpha = ones(V, 1); %initial condition
 %niters = 100;
 %obj_value = zeros(1,niters); 
@@ -55,8 +55,8 @@ if iscell(data)
     data = data'; 
     X = cell2mat(data)'; % concatenated data
     % data: original split data type
-    [~, n_vec] = cellfun(@size, data);
-    n = n_vec(1);
+    [~, ndata_vec] = cellfun(@size, data);
+    n = ndata_vec(1);
 else
     X = data;
     n = size(data,1);
@@ -143,6 +143,9 @@ for v = 1:V
         case 'eps_neighbor'
             wmat = full(SimGraph_Epsilon(X, params{v}));
             
+        case 'CLR'
+            [~, wmat] = CLR_main(X, nbclusters, params{v});
+            
         case 'chi_square' % problem here !!!
             for i = 1: nbsamples - 1
                 wmat(i, i + 1: end) = feval(func{v}, repmat(X(i, :), nbsamples - i, 1), X(i + 1: end,:));
@@ -166,15 +169,15 @@ for v = 1:V
     end
 
     [U_,S,~] = svd(A_norm{v}, 'econ');
-    %F_v{v} = U(:,  end-eigv(1,2): end-eigv(1,1));
-    %[U,~,V] = svd(M,'econ');
-    %F_v{v} = U(:,  end-eigv(1,2)+1: end);
-    %F_v{v} = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
-    U = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
     
-    % Normalize each row to be of unit length
-    sq_sum = sqrt(sum(U.*U, 2)) + 1e-20;
-    F_v{v} = U ./ repmat(sq_sum, 1, nbclusters);
+    % Unormalize on each row
+    U = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
+    F_v{v} = U;
+    
+%     % Normalize each row to be of unit length
+%     
+%     sq_sum = sqrt(sum(U.*U, 2)) + 1e-20;
+%     F_v{v} = U ./ repmat(sq_sum, 1, nbclusters);
 end
 
 %???
