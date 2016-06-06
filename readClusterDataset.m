@@ -53,6 +53,11 @@ switch dataset_name
          for i = 1:k
             X0{i} = [X_train{i};X_test{i}];
          end
+         
+    case 'Cal7'
+        load('../dataset_Large-Scale/Caltech101-7.mat');
+        
+        k = numel(X); 
 end
 
 %% ------------normalization-----------
@@ -69,5 +74,5 @@ for i = 1:k
     Xtst{i} = X{i}(:,ntrn+1:n);
 end
 
-data = X0;
+data = X;
 label = [Ytrn; Ytst];

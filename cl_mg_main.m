@@ -55,26 +55,27 @@ MIhat = MutualInfo(label_ind, clusters);
 disp(RI);
 disp(MIhat);
 
-%% MMSC
-for t = -2:0.2:2
-    a_MMSC = 10^t;
-    fun_MMSC = 'SelfTune';
-    param_MMSC = 8;
-    [clusters, obj_value] = MMSC(data, nbclusters, a_MMSC, fun_MMSC, param_MMSC);
-    [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
-    MIhat = MutualInfo(label_ind, clusters);
-    disp(RI);
-    disp(MIhat);
-end
-
 %% MVSC
 for t = 0.1:0.2:2
     nbSltPnt = 40;
     gamma_mvsc = 10^t; % gamma_mvsc = 10; may need to be changed
     sigma_mvsc = 10;
     k_mvsc = 8;
-    [clusters, ~, obj_value] = MVSC(data, nbclusters, nbSltPnt, k_mvsc, gamma_mvsc, ...
+    [clusters0, ~, obj_value, nbData] = MVSC(data, nbclusters, nbSltPnt, k_mvsc, gamma_mvsc, ...
         func, sigma_mvsc);
+    clusters = clusters0(1:nbData);
+    [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
+    MIhat = MutualInfo(label_ind, clusters);
+    disp(RI);
+    disp(MIhat);
+end
+
+%% MMSC
+for t = -2:0.2:2
+    a_MMSC = 10^t;
+    fun_MMSC = 'SelfTune';
+    param_MMSC = 8;
+    [clusters, obj_value] = MMSC(data, nbclusters, a_MMSC, fun_MMSC, param_MMSC);
     [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
     MIhat = MutualInfo(label_ind, clusters);
     disp(RI);
