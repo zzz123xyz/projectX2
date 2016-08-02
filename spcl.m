@@ -80,7 +80,11 @@ else
     eigv = [2 2];
 end
 %%all parameters are got%%%
-data = cell2mat(data')'; %concatenate all the dims
+if iscell(data)
+    data = cell2mat(data')'; %concatenate all the dims
+else
+    data = data';
+end
 
 sprintf('Graph choice is fully connected\nLaplacian choice is %s\nCluster algorithm is %s', lapmatrixchoice, clusteralgo)
 [nbsamples, dim] = size(data);

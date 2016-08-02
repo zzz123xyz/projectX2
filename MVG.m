@@ -1,7 +1,25 @@
-function [C_f, Y_f, obj_value, F_vf] = MVG (data, nbclusters, eigv, method, param)
+function [C_f, Y_f, obj_value, F_vf] = MVG (data, nbclusters, eta, eigv, method, param)
+
+%% ==========
+% for implimentation of 
+% JMVG
+% Lance (Liangchen) Liu
+% input: 
+%   data: X feature matrix dim: R^{m*n} (m features & n samples)
+%   nbclusters: number of clusters
+%   eta: parameter
+%   method: method to construct graph
+%   param: parameter for the method of constructing graph
+%output:
+%   C_f: final center
+%   Y_f: predicted labels
+%   obj_value: objective value
+%   F_vf: the final projected data
+%% ==========
+
 
 niters = 50;
-eta = 0.01; %a fixed para
+% eta = 0.01; %a fixed para
 in_iters = 9; %increase iters
 
 V = numel(data);

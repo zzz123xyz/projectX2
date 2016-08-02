@@ -1,4 +1,4 @@
-function [C_f, Y_f, obj_value, F_vf] = cl_mg_v2(data, nbclusters, varargin)
+function [C_f, Y_f, obj_value, F_vf] = cl_mg_v2(data, nbclusters, eta, varargin)
 % cl_mg_v2(data, nbclusters, varargin) is the second version of clustering 
 % algorithm iva multi-graph joint learning.
 %
@@ -44,7 +44,7 @@ algochoices = {'np', 'kmean'};
 func = {'gaussdist','knn','eps_neighbor','CLR'};
     % = {'gaussdist','knn','eps_neighbor','CLR'};
 V = numel(func); % number of graphs from data (may need to put this part into graph section later)
-eta = 0.01; %a fixed para
+%eta = 0.01; %a fixed para, now has been seen as the input
 alpha = ones(V, 1); %initial condition
 %niters = 100;
 %obj_value = zeros(1,niters); 
