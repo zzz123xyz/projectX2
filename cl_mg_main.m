@@ -38,7 +38,7 @@ end
 name = dir('results/result_*');
 k = numel(name);
 ii = k+1;
-OutputFile = ['results/result_',num2str(ii,'%03i'),'_',dataset_name,'_',featType,'_',num2str(nbclusters),'_',fnPart,'.txt'];
+OutputFile = ['results/result_NewEve',num2str(ii,'%03i'),'_',dataset_name,'_',featType,'_',num2str(nbclusters),'_',fnPart,'.txt'];
 fid = fopen(OutputFile, 'wt');
 fprintf(fid,['dataset:',dataset_name,'\n']);
 fprintf(fid,['methods:',fnPart,'\n']);
@@ -66,9 +66,14 @@ for i=1:nmethod
             MIhat = MutualInfo(label_ind, clusters);
             disp(RI);
             disp(MIhat);
-            result = ClusteringMeasure(label_ind, clusters);
-            disp(['ACC, MIhat, Purity:',num2str(result)]);
-            fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+%             result = ClusteringMeasure(label_ind, clusters);
+%             disp(['ACC, MIhat, Purity:',num2str(result)]);
+%             fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+
+            Clu.y = clusters;
+            result = cluster_evaluation(label_ind, Clu);
+            disp(['ACC, F_1, F_5, purity NMI:',num2str(result)]);
+            fprintf(fid, ['ACC, F_1, F_5, purity NMI:',num2str(result),'\n\n']);
             
         case  'SPCL'
            %% spectral clustering
@@ -80,7 +85,7 @@ for i=1:nmethod
             
             eigv = [1 nbclusters]; %eigv = [1 28], [2 2], [1 nbclusters];
             fprintf(fid, 'eigv: %s \n', num2str(eigv));
-            pdsigma = 3.5; %the predefine sigma parameter 2.7;
+            %pdsigma = 3.5; %the predefine sigma parameter 2.7;
             
             for percent = 0.05: 0.05: 0.5;
                 
@@ -102,9 +107,14 @@ for i=1:nmethod
                 MIhat = MutualInfo(label_ind, clusters);
                 disp(RI);
                 disp(MIhat);
-                result = ClusteringMeasure(label_ind, clusters);
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+%                 result = ClusteringMeasure(label_ind, clusters);
+%                 disp(['ACC, MIhat, Purity:',num2str(result)]);
+%                 fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+                
+                Clu.y = clusters;
+                result = cluster_evaluation(label_ind, Clu);
+                disp(['ACC, F_1, F_5, purity NMI:',num2str(result)]);
+                fprintf(fid, ['ACC, F_1, F_5, purity NMI:',num2str(result),'\n\n']);
             end
             
         case 'SPCLNaive'
@@ -136,9 +146,13 @@ for i=1:nmethod
             MIhat = MutualInfo(label_ind, clusters);
             disp(RI);
             disp(MIhat);
-            result = ClusteringMeasure(label_ind, clusters);
-            disp(['ACC, MIhat, Purity:',num2str(result)]);
-            fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+%             result = ClusteringMeasure(label_ind, clusters);
+%             disp(['ACC, MIhat, Purity:',num2str(result)]);
+%             fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+            Clu.y = clusters;
+            result = cluster_evaluation(label_ind, Clu);
+            disp(['ACC, F_1, F_5, purity NMI:',num2str(result)]);
+            fprintf(fid, ['ACC, F_1, F_5, purity NMI:',num2str(result),'\n\n']);
             
         case 'MVSC'
             %% MVSC
@@ -171,9 +185,13 @@ for i=1:nmethod
                 disp(RI);
                 disp(MIhat);
                 
-                result = ClusteringMeasure(label_ind, clusters);
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n']);
+%                 result = ClusteringMeasure(label_ind, clusters);
+%                 disp(['ACC, MIhat, Purity:',num2str(result)]);
+%                 fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n']);
+                Clu.y = clusters;
+                result = cluster_evaluation(label_ind, Clu);
+                disp(['ACC, F_1, F_5, purity NMI:',num2str(result)]);
+                fprintf(fid, ['ACC, F_1, F_5, purity NMI:',num2str(result),'\n\n']);
             end
             fprintf(fid, '\n');
             
@@ -212,9 +230,13 @@ for i=1:nmethod
                 disp(RI);
                 disp(MIhat);
                 
-                result = ClusteringMeasure(label_ind, clusters);
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n']);
+%                 result = ClusteringMeasure(label_ind, clusters);
+%                 disp(['ACC, MIhat, Purity:',num2str(result)]);
+%                 fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n']);
+                Clu.y = clusters;
+                result = cluster_evaluation(label_ind, Clu);
+                disp(['ACC, F_1, F_5, purity NMI:',num2str(result)]);
+                fprintf(fid, ['ACC, F_1, F_5, purity NMI:',num2str(result),'\n\n']);
             end
             fprintf(fid, '\n');
             
@@ -242,9 +264,13 @@ for i=1:nmethod
                     disp(RI);
                     disp(MIhat);
                     
-                    result = ClusteringMeasure(label_ind, clusters);
-                    disp(['ACC, MIhat, Purity:',num2str(result)]);
-                    fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+%                     result = ClusteringMeasure(label_ind, clusters);
+%                     disp(['ACC, MIhat, Purity:',num2str(result)]);
+%                     fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+                    Clu.y = clusters;
+                    result = cluster_evaluation(label_ind, Clu);
+                    disp(['ACC, F_1, F_5, purity NMI:',num2str(result)]);
+                    fprintf(fid, ['ACC, F_1, F_5, purity NMI:',num2str(result),'\n\n']);
                 end
             end
             
@@ -274,9 +300,13 @@ for i=1:nmethod
                 disp(RI);
                 disp(MIhat);
                 
-                result = ClusteringMeasure(label_ind, clusters);
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+%                 result = ClusteringMeasure(label_ind, clusters);
+%                 disp(['ACC, MIhat, Purity:',num2str(result)]);
+%                 fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+                Clu.y = clusters;
+                result = cluster_evaluation(label_ind, Clu);
+                disp(['ACC, F_1, F_5, purity NMI:',num2str(result)]);
+                fprintf(fid, ['ACC, F_1, F_5, purity NMI:',num2str(result),'\n\n']);
             end
             
             fprintf(fid, '\n');
@@ -302,9 +332,13 @@ for i=1:nmethod
                 disp(RI);
                 disp(MIhat);
                 
-                result = ClusteringMeasure(label_ind, clusters);
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+%                 result = ClusteringMeasure(label_ind, clusters);
+%                 disp(['ACC, MIhat, Purity:',num2str(result)]);
+%                 fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+                Clu.y = clusters;
+                result = cluster_evaluation(label_ind, Clu);
+                disp(['ACC, F_1, F_5, purity NMI:',num2str(result)]);
+                fprintf(fid, ['ACC, F_1, F_5, purity NMI:',num2str(result),'\n\n']);
             end
             fprintf(fid, '\n');
             
@@ -342,9 +376,13 @@ for i=1:nmethod
                 disp(RI);
                 disp(MIhat);
                 
-                result = ClusteringMeasure(label_ind, clusters);
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+%                 result = ClusteringMeasure(label_ind, clusters);
+%                 disp(['ACC, MIhat, Purity:',num2str(result)]);
+%                 fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+                Clu.y = clusters;
+                result = cluster_evaluation(label_ind, Clu);
+                disp(['ACC, F_1, F_5, purity NMI:',num2str(result)]);
+                fprintf(fid, ['ACC, F_1, F_5, purity NMI:',num2str(result),'\n\n']);
                 
             end
     end
