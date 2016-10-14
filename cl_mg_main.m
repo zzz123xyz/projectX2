@@ -16,9 +16,10 @@ addpath('..\clustering_eval_kun')
 dataset_name = 'Cal20'; 
 featType = 'all'; % default : all
 
-%methods = {'kmeans', 'SPCL'};
-%methods = {'kmeans','SPCL','SPCLNaive', 'MVSC', 'MVCSS', 'MVG', 'CLR', 'MVMG'};
-methods = {'kmeans','SPCL','SPCLNaive'};
+%methods = {'kmeans'};
+methods = {'kmeans','SPCLNaive'};
+%methods = {'kmeans','SPCL','SPCLNaive', 'MVSC', 'MMSC', 'MVCSS', 'MVG', 'CLR', 'MVMG'};
+%methods = {'kmeans','SPCL','SPCLNaive'};
 %methods = {'kmeans', 'SPCL', 'CLR'};
 %methods = {'kmeans', 'SPCL', 'MVSC', 'MVCSS', 'MVG', 'CLR', 'MVMG'};
 %methods = {'kmeans', 'SPCL', 'MVSC', 'MMSC', 'MVCSS', 'MVG', 'CLR', 'MVMG'};
@@ -40,9 +41,10 @@ k = numel(name);
 ii = k+1;
 OutputFile = ['results/result_',num2str(ii,'%03i'),'_',dataset_name,'_',featType,'_',num2str(nbclusters),'_',fnPart,'.txt'];
 fid = fopen(OutputFile, 'wt');
+fprintf(fid,['filename:',OutputFile,'\n']);
 fprintf(fid,['dataset:',dataset_name,'\n']);
-fprintf(fid,['methods:',fnPart,'\n']);
 fprintf(fid,['number of clusters:',num2str(nbclusters),'\n']);
+fprintf(fid,['methods:',fnPart,'\n\n']);
 
 nmethod = numel(methods);
 
@@ -79,8 +81,8 @@ for i=1:nmethod
             fprintf(fid, 'algochoices: %s \n', algochoices);
             
             eigv = [1 nbclusters]; %eigv = [1 28], [2 2], [1 nbclusters];
-            fprintf(fid, 'eigv: %s \n', num2str(eigv));
-            pdsigma = 3.5; %the predefine sigma parameter 2.7;
+            fprintf(fid, 'eigv: %s \n\n', num2str(eigv));
+            %%pdsigma = 3.5; %the predefine sigma parameter 2.7;
             
             for percent = 0.05: 0.05: 0.5;
                 
@@ -148,18 +150,18 @@ for i=1:nmethod
             disp(method);
             fprintf(fid, [method,'\n']);
             
-            nbSltPnt = 40; %nbSltPnt = 40 for MSCRV1 %400  others
-            sigma = 10;
+            nbSltPnt = 400; %nbSltPnt = 40 for MSCRV1 %400  others
+            sigma; % assume the value is as the same as in SPCL
             k = 8;
             func = 'gaussdist';
             fprintf(fid, 'nbSltPnt: %d \n', nbSltPnt);
             fprintf(fid, 'sigma: %f \n', sigma);
             fprintf(fid, 'k: %d \n', k);
-            fprintf(fid, 'func: %s \n', func);
-            param_lsit = 0.1:0.2:2;
+            fprintf(fid, 'func: %s \n\n', func);
+            param_list = 0.1:0.2:2;
             
-            for j = 1:numel(param_lsit)
-                t = param_lsit(j);
+            for j = 1:numel(param_list)
+                t = param_list(j);
                 gamma = 10^t; % gamma = 10; may need to be changed
                 fprintf(fid, 'gamma: %f \n', gamma);
                 
@@ -193,7 +195,7 @@ for i=1:nmethod
             
             fprintf(fid, 'func: %s \n', func);
             fprintf(fid, 'param: %d \n', param);
-            fprintf(fid, 'discrete_model: %s \n', discrete_model);
+            fprintf(fid, 'discrete_model: %s \n\n', discrete_model);
             for t = -2:0.2:2
                 a = 10^t;
                 fprintf(fid, 'a: %f \n', a);
@@ -224,7 +226,7 @@ for i=1:nmethod
             % Wang, Hua, Feiping Nie, and Heng Huang. "Multi-view clustering and feature learning via structured sparsity."
             % Proceedings of the 30th International Conference on Machine Learning (ICML-13). 2013.
             disp(method);
-            fprintf(fid, [method,'\n']);
+            fprintf(fid, [method,'\n\n']);
             
             % exponent = [-5 : 5];
             exponent = 1;
@@ -258,7 +260,7 @@ for i=1:nmethod
             m = 9;
             eigv = [1 nbclusters]; %eigv = [1 28], [2 2], [1 nbclusters];
             fprintf(fid, 'm: %d \n', m);
-            fprintf(fid, 'eigv: %s \n', num2str(eigv));
+            fprintf(fid, 'eigv: %s \n\n', num2str(eigv));
             
             for t = -2:0.2:2
                 
@@ -285,7 +287,7 @@ for i=1:nmethod
             %% CLR
             % Nie, Feiping, et al. "The Constrained Laplacian Rank Algorithm for Graph-Based Clustering." (2016).
             disp(method);
-            fprintf(fid, [method,'\n']);
+            fprintf(fid, [method,'\n\n']);
             
             %m = 7; % a para to tune m <10 in paper
             
@@ -327,7 +329,7 @@ for i=1:nmethod
             fprintf(fid, 'sigma: %f \n', sigma);
             fprintf(fid, 'epsilon: %f \n', epsilon);
             fprintf(fid, 'k: %d \n', k);
-            fprintf(fid, 'eigv: %s \n', num2str(eigv));
+            fprintf(fid, 'eigv: %s \n\n', num2str(eigv));
             
             for t = -2:0.2:2
                 eta = 10^t;
@@ -353,3 +355,5 @@ end
 
 fclose(fid);
 
+load gong.mat;
+sound(y, 8*Fs);
