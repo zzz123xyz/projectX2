@@ -1,13 +1,21 @@
 % clustering dataset reading
 % dataset_name: NUS_lite, MSRCV1
 
-function [data, label] = readClusterDataset(dataset_name, varargin)
+function [data, label] = readClusterDataset(dataset_name_full, varargin)
 
-  if ismember(dataset_name, {'NUS_lite', 'MSRCV1', 'AWA', 'ApAy'});
+
+tmp = strfind(dataset_name_full,'_');
+if isempty(tmp)
+    dataset_name = dataset_name_full;
+else
+    dataset_name = dataset_name_full(1:tmp(1)-1);
+end
+
+if ismember(dataset_name, {'NUS_lite', 'MSRCV1', 'AWA', 'ApAy', 'USAA'});
     DatasetType = 1;
-  elseif ismember(dataset_name, {'Cal7', 'Cal20', 'HW' ,'NUSWIDEOBJ', 'AWA4000'});
+elseif ismember(dataset_name, {'Cal7', 'Cal20', 'HW' ,'NUSWIDEOBJ', 'AWA4000','ApAy_MDR','AWA_MDR'});
     DatasetType = 2;
-  end
+end
 
 switch dataset_name
     case 'NUS_lite'
@@ -46,6 +54,24 @@ switch dataset_name
         for i = 1:k
             X0{i} = [X_train{i},X_test{i}];
         end
+        
+    case 'ASUN' % uncomplete
+        comp_label_file = ['../computed_data/label_',dataset_name,'.mat'];
+        load(comp_label_file);
+        Ytrn = img_classes_num_trn;
+        Ytst = img_classes_num_tst;        
+        
+        
+        
+        comp_data_file = ['../computed_data/feat_reduce_',dataset_name,'.mat'];
+        load(comp_data_file);
+        
+        X_train = {feat_trn_red'};
+        X_test = {feat_tst_red'};
+         k = numel(X_train);
+         for i = 1:k
+            X0{i} = [X_train{i};X_test{i}]';
+         end
 
     case 'AWA'
         [X_train, X_test, Ytrn, Ytst] = ReadDataSetAWA;
@@ -55,15 +81,26 @@ switch dataset_name
          end
 
     case 'ApAy'
-        [~, ~, Ytrn, Ytst] = ReadDataSetApAy;
-        comp_data_file = ['../computed_data/feat_reduce_',dataset_name,'.mat'];
-        load(comp_data_file);
-        X_train = {feat_trn_red'};
-        X_test = {feat_tst_red'};
-         k = numel(X_train);
-         for i = 1:k
-            X0{i} = [X_train{i};X_test{i}];
-         end
+        
+        if strcmp(dataset_name_full, 'ApAy')
+            [~, ~, Ytrn, Ytst] = ReadDataSetApAy;
+            comp_data_file = ['../computed_data/feat_reduce_',dataset_name,'.mat'];
+            load(comp_data_file);
+            X_train = {feat_trn_red'};
+            X_test = {feat_tst_red'};
+            k = numel(X_train);
+            for i = 1:k
+                X0{i} = [X_train{i};X_test{i}]';
+            end
+            
+        else
+            [~, ~, Y, ~] = ReadDataSetApAy; % only consider training samples
+            filepath = ['../computed_data/',dataset_name_full];
+            load(filepath);
+            X0 = Data; clear Data
+            k = numel(X0);
+            DatasetType = 2;  %reset DatasetType to fit for the new subset
+        end
 
     case 'Cal7'
         load('../dataset_Large-Scale/Caltech101-7.mat');
@@ -82,9 +119,9 @@ switch dataset_name
         Y = Y + 1;
         
     case 'AWA4000'
-        load('V:\lance\Animals_with_Attributes\AWA4000\AWA4000.mat');
-        X0 = X; clear X; 
-        k = numel(X0);
+        load('../Animals_with_Attributes/AWA4000/AWA4000.mat');
+        k = 3; %choose first 3 features
+        X0 = X(1:3); clear X; 
         
     case 'Yeast' % not a multi view dataset
         fid = fopen('../yeast/yeast.data','r');
@@ -94,6 +131,41 @@ switch dataset_name
         X = cell2mat(tmp(2:9))';
         class = tmp{10};
         [class_list, ~, Y] = unique(class);
+        
+    case 'USAA'
+            file_path = '..\USAA.mat';
+            load(file_path);
+            
+            Ytrn = train_video_label;
+            Ytst = test_video_label;
+        
+        if strcmp(dataset_name_full, 'USAA')
+            
+            Xtrn = Xtrain'; clear Xtrain
+            Xtst = Xtest'; clear Xtest
+            X = [Xtrn,Xtst];
+            X0{1} = X(1:5000,:);
+            X0{2} = X(5001:10000,:);
+            X0{3} = X(10001:14000,:);
+            k = numel(X0);
+            clear X;
+            
+        else
+            file_path = ['..\computed_data\',dataset_name_full];
+            load(file_path);
+            X0 = Data;
+            k = numel(X0);
+            clear Data;
+            
+        end 
+        
+    case 'AWA_MDR'
+        filepath = '../computed_data/AWA_MDR.mat';
+        load(filepath);
+        X0 = Data; clear Data
+        k = numel(X0);
+        [~, ~, Y, ~] = ReadDataSetAWA;
+        
 end
 
 %% ------------get label-----------

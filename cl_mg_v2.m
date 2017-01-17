@@ -36,7 +36,7 @@ function [C_f, Y_f, obj_value, F_vf] = cl_mg_v2(data, nbclusters, eta, varargin)
         
 %[d,n] = size(data);          
 
-niters = 50;
+niters = 100;
 in_iters = 9; %increase iters
 plotchoices = {'bo','r+','md','k*','wv'};
 lapmatrixchoices = {'unormalized', 'sym', 'rw'};
@@ -199,12 +199,12 @@ for i = 1:V  % number of graphs from data (may need to put this part into graph 
     tmp = tmp + dim_V(i);
     dim_sum(i) = tmp;
 end
-dim_V_ind1 = [1,dim_sum(1:V-1)+1];
-dim_V_ind2 = [dim_sum(1:V-1),dim_sum(V)];
+dim_V_ind1 = [1,dim_sum(1:V-1)+1]; %start index of each view of features
+dim_V_ind2 = [dim_sum(1:V-1),dim_sum(V)]; %end index of each view of features
     
-max_rec = -inf;
-count = 1;
-in_count = 0;
+max_rec = -inf; % the varible record the max objective value
+count = 1; % counts of iters
+in_count = 0; % counts of iters when objective value increase
 while count <= niters
 % fix F and alpha
     F_a = cell2mat(F_v);

@@ -141,14 +141,14 @@ else
     clusters = 1 + (newspace > 0);
 end
 
-if(dim == 2)
-    figure;
-    for i = 1: nbclusters
-
-        points = data(clusters == i, :);
-        plot(points(:,1), points(:,2), plotchoices{i});
-        hold on;
-    end
-    title('clustered data using spectral clustering');
-    grid on;
-end
+% if(dim == 2)
+%     figure;
+%     for i = 1: nbclusters
+% 
+%         points = data(clusters == i, :);
+%         plot(points(:,1), points(:,2), plotchoices{i});
+%         hold on;
+%     end
+%     title('clustered data using spectral clustering');
+%     grid on;
+% end

@@ -25,9 +25,15 @@ in_iters = 9; %increase iters
 V = numel(data);
 n = size(data{1},2);
 
-for v = 1:V
+parfor v = 1:V
     X = data{v};
-    A_norm{v} = constructGraph(X, nbclusters, method, param);
+    
+    if isscalar(param)
+        paramOne = param;
+    else
+        paramOne = param(v);
+    end
+    A_norm{v} = constructGraph(X, nbclusters, method, paramOne);
     
     [U_,S,~] = svd(A_norm{v}, 'econ');
     U = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
