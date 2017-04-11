@@ -1,6 +1,6 @@
 function [C_f, Y_f, obj_value, F_vf] = cl_mg_v2(data, nbclusters, eta, varargin)
 % cl_mg_v2(data, nbclusters, varargin) is the second version of clustering 
-% algorithm iva multi-graph joint learning.
+% algorithm via multi-graph joint learning. (JMGC)
 %
 % The first augument is data representation R_{d \times n}
 
@@ -36,9 +36,10 @@ function [C_f, Y_f, obj_value, F_vf] = cl_mg_v2(data, nbclusters, eta, varargin)
         
 %[d,n] = size(data);          
 
-niters = 100;
-in_iters = 9; %increase iters
-plotchoices = {'bo','r+','md','k*','wv'};
+%% parameter setting
+niters = 100; % total number of interations
+in_iters = 9; % number of increasing iters
+% plotchoices = {'bo','r+','md','k*','wv'}; % use if visualize the results
 lapmatrixchoices = {'unormalized', 'sym', 'rw'};
 algochoices = {'np', 'kmean'};
 func = {'gaussdist','knn','eps_neighbor','CLR'};
@@ -61,15 +62,6 @@ else
     X = data;
     n = size(data,1);
 end
-
-% 
-% tmp = 0;
-% for i = 1:V  % number of graphs from data (may need to put this part into graph section later)
-%     tmp = tmp + dim_V(i);
-%     dim_sum(i) = tmp;
-% end
-% dim_V_ind1 = [1,dim_sum(1:V-1)+1];
-% dim_V_ind2 = [dim_sum(1:V-1),dim_sum(V)];
 
 %%get all the parameters%%%
 if(ischar(varargin{count}))
@@ -123,8 +115,10 @@ end
 
 sprintf('Graph choice is fully connected\nLaplacian choice is %s\nCluster algorithm is %s', lapmatrixchoice, clusteralgo)
 
+
+%% Initial graph constructing
 [nbsamples, dim] = size(X);
-X = X'; %transpose as the intro in this code
+X = X'; %transpose as the introduction in this code
 
 % initialization
 for v = 1:V
@@ -172,12 +166,12 @@ for v = 1:V
     
     % Unormalize on each row
     U = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
-    F_v{v} = U;
+    %F_v{v} = U;
     
-%     % Normalize each row to be of unit length
-%     
-%     sq_sum = sqrt(sum(U.*U, 2)) + 1e-20;
-%     F_v{v} = U ./ repmat(sq_sum, 1, nbclusters);
+    % Normalize each row to be of unit length
+    
+    sq_sum = sqrt(sum(U.*U, 2)) + 1e-20;
+    F_v{v} = U ./ repmat(sq_sum, 1, nbclusters);
 end
 
 %???
@@ -193,6 +187,7 @@ end
 %     F_v{1} = U(:,  eigv(1,1)+1: eigv(1,2)+1);
 % %%%%
     
+%% Optimization
 tmp = 0;
 [~, dim_V] = cellfun(@size, F_v');
 for i = 1:V  % number of graphs from data (may need to put this part into graph section later)
@@ -219,16 +214,17 @@ while count <= niters
     % ->fix F
        %B = Y*C;
     for v = 1:V
-        B = Y*C(:,dim_V_ind1(v):dim_V_ind2(v));
+        B{v} = Y*C(:,dim_V_ind1(v):dim_V_ind2(v));
         nv(v) = trace(F_v{v}'*A_norm{v}*F_v{v});
     end
+    %B = Y*C;
     
      lambda = norm(nv);
      alpha = nv./lambda;
 
     % ->fix alpha     
      for v = 1:V
-        [F_v{v}, obj] = GPI(A_norm{v}, B, eta/alpha(v));
+        [F_v{v}, obj] = GPI(A_norm{v}, B{v}, eta/alpha(v));
         %problem here 1. how to set the third para for GPI, how to make the
         %B,use all feature to do kmeans cluster or sperate each feature.
      end
@@ -258,3 +254,4 @@ while count <= niters
     
 end
 
+alpha; % stop here to show alpha

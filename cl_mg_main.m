@@ -13,19 +13,20 @@ addpath('..\clustering_eval_kun')
 addpath('..\ApAy_dataset')
 addpath('..\Animals_with_Attributes')
 
-%% ==== dataset and global para ====
+%% ==== dataset and global para ==== %!!!!
 %dataset_name = 'MSRCV1'; %'AWA','MSRCV1','NUSWIDEOBJ','Cal7','Cal20',
-%'HW',AWA4000,'ApAy','AWA_MDR','ApAy_MDR'(rename from ApAy_MDR1,ApAy_MDR2... ),
+%'HW',AWA4000,'ApAy','AWA_MDR','ApAy_MDR'(rename from
+%ApAy_MDR1,ApAy_MDR2... ),ApAy_MDR_R01R01R005, A
 %'USAA','USAA_MDR_R005'
-dataset_name = 'MSRCV1'; 
+dataset_name = 'ApAy'; 
 featType = 'all'; % default : all
-nreps = 3; % parameter  default : 1
+nreps = 1; % parameter  default : 1
 clusterResults = struct;
 %bestClusterPara = getBestPara(dataset_name); % using best parameters if
 %there any !!!
-clusterResultsFile = ['results\clusterResults_',dataset_name,'.mat'];
+saveClusterResultsFile = ['results\clusterResults_',dataset_name,'.mat'];
 
-%% ==== selecting methods ====
+%% ==== selecting methods ==== %!!!!
 %methods = {'kmeans'};
 %methods = {'kmeans','SPCLNaive'};
 %methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
@@ -532,7 +533,9 @@ for i=1:nmethod
                 
                 allResults = zeros(nreps,3);
                 for v = 1:nreps
+                    tic
                     [C, Y, obj_value, data_clustered] = cl_mg_v2(data, nbclusters, eta, {sigma, [k sigma], epsilon, m}, 'sym', algochoices, eigv); %***
+                    toc
                     [clusters,~,~] = find(Y');  %change label matrix into column
                     clusterResults.MVMG = clusters;
                     
@@ -555,7 +558,7 @@ for i=1:nmethod
 end
 
 fclose(fid);
-save(clusterResultsFile,'clusterResults'); % uncomment while saving
+save(saveClusterResultsFile,'clusterResults'); % uncomment while saving
 
 load gong.mat;
 sound(y, 8*Fs);

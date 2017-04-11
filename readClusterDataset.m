@@ -1,5 +1,23 @@
-% clustering dataset reading
-% dataset_name: NUS_lite, MSRCV1
+%% clustering dataset reading
+% --- details --- (option)
+
+% --- version ---- (option)
+
+% --- Input ---
+
+% --- output ----
+% data: 
+%   a cell with nfeat elements which are in form of (ndim * nsample) 
+% label:
+%   label vector of the data (1 * nsample)
+% --- ref ---
+
+% --- note ---(option)
+% 1. see also readClassDataset.m
+% 2. line  if strcmp(dataset_name_full, 'ApAy') %% Do I need to use the first part of the if section ???
+%
+
+% by Lance Liu 
 
 function [data, label] = readClusterDataset(dataset_name_full, varargin)
 
@@ -29,7 +47,7 @@ switch dataset_name
 
         data_path = {train_path,test_path};
         k = numel(train_path);
-
+ 
         Ytrn = double(ReadLabel(label_path, 'Train'));
 
         Ytst = double(ReadLabel(label_path, 'Test'));
@@ -82,10 +100,10 @@ switch dataset_name
 
     case 'ApAy'
         
-        if strcmp(dataset_name_full, 'ApAy')
+        if strcmp(dataset_name_full, 'ApAy') %% Do I need to use the first part of the if section ???
             [~, ~, Ytrn, Ytst] = ReadDataSetApAy;
             comp_data_file = ['../computed_data/feat_reduce_',dataset_name,'.mat'];
-            load(comp_data_file);
+            load(comp_data_file); %load feat_trn_red, feat_tst_red
             X_train = {feat_trn_red'};
             X_test = {feat_tst_red'};
             k = numel(X_train);
@@ -93,10 +111,18 @@ switch dataset_name
                 X0{i} = [X_train{i};X_test{i}]';
             end
             
+        elseif strcmp(dataset_name_full, 'ApAy_4_trn')    
+            [~, ~, Y, ~] = ReadDataSetApAy;
+            filepath = ['../computed_data/',dataset_name_full];
+            load(filepath);  %load Data
+            X0 = Data; clear Data
+            k = numel(X0);
+            DatasetType = 2;
+            
         else
             [~, ~, Y, ~] = ReadDataSetApAy; % only consider training samples
             filepath = ['../computed_data/',dataset_name_full];
-            load(filepath);
+            load(filepath); %load Data, testIndicator, trainIndicator
             X0 = Data; clear Data
             k = numel(X0);
             DatasetType = 2;  %reset DatasetType to fit for the new subset

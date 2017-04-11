@@ -38,7 +38,10 @@ parfor v = 1:V
     [U_,S,~] = svd(A_norm{v}, 'econ');
     U = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
     
-    F_v{v} = U;
+    sq_sum = sqrt(sum(U.*U, 2)) + 1e-20;
+    F_v{v} = U ./ repmat(sq_sum, 1, nbclusters);
+    
+    %F_v{v} = U;
 end
 
 tmp = 0;
@@ -68,7 +71,7 @@ while count <= niters
     % ->fix F
        %B = Y*C;
     for v = 1:V
-        B = Y*C(:,dim_V_ind1(v):dim_V_ind2(v));
+        B{v} = Y*C(:,dim_V_ind1(v):dim_V_ind2(v));
         nv(v) = trace(F_v{v}'*A_norm{v}*F_v{v});
     end
     
@@ -77,7 +80,7 @@ while count <= niters
 
     % ->fix alpha     
      for v = 1:V
-        [F_v{v}, obj] = GPI(A_norm{v}, B, eta/alpha(v));
+        [F_v{v}, obj] = GPI(A_norm{v}, B{v}, eta/alpha(v));
         %problem here 1. how to set the third para for GPI, how to make the
         %B,use all feature to do kmeans cluster or sperate each feature.
      end
