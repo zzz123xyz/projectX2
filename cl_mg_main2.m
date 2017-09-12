@@ -554,6 +554,20 @@ for i=1:nmethod
                 fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
                 
             end
+            
+        case 'ONGC'
+            disp(method);
+            fprintf(fid, [method,'\n']);
+            
+            mu_vec = [0, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5 ];
+            
+            for t = 1:numel(mu_vec)
+                mu = mu_vec(t);
+                
+                
+            end
+            
+            
     end
     
 end

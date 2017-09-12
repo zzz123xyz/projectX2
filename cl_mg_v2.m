@@ -1,40 +1,50 @@
 function [C_f, Y_f, obj_value, F_vf] = cl_mg_v2(data, nbclusters, eta, varargin)
+       
+%% Joint Multi-Graph Clustering algorithm
+% --- details --- (option)
 % cl_mg_v2(data, nbclusters, varargin) is the second version of clustering 
 % algorithm via multi-graph joint learning. (JMGC)
+
+% --- version ---- (option)
+% cl_mg_v2  
+
+% cl_mg
+
+% --- Input ---
+% data: 
+%   the input data R^{d*n} d is dimension, n is number of samples
+% nbclusters: 
+%   the number of the clusters
+% eta: 
+%   the parameter of the algorithm
+% varargin: 
+%   optional parameters for initial spectral clustering
+%     The first parameter of varargin is the name of the similarity
+%       function to use. (if omitted the default will be using all functions)
+%     The second is the parameters to pass to those similarity functions.
+%     The third parameter is the type of the Laplacian matrix:
+%       'unormalized' - unnormalized laplacian matrix
+%       'sym' - normalized symmetric laplacian matrix
+%       'rw' - normalized asymmetric laplacian matrix
+%       (if omitted the default will be 'unnormalized')
+%     The fourth parameter is the algorithm used for organizing eigenvectors:
+%       'np' - generally used for 2 clusters, one eigenvector must be used, if
+%        will put positive values in class 1 and negative values in class 2
+%       'kmean' - a k-mean algorithm will be used to cluster the given eigenvectors
+%     The fifth parameter is the eigenvector choice, manually set it as
+%       eigv = [1 nbclusters];
 %
-% The first augument is data representation R_{d \times n}
-
-% The first parameter of varargin is the name of the function to use.
-%
-% The second is the parameter to pass to the function.
-
-% Third parameter is the type of the Laplacian matrix:
-% 'unormalized' - unnormalized laplacian matrix
-% 'sym' - normalized symmetric laplacian matrix
-% 'rw' - normalized asymmetric laplacian matrix
-% (if omitted the default will be 'unnormalized')
+% --- output ----
+% C_f: nbclusters cluster centroid locations in R^{nbclusters * d} 
+% Y_f: the indicating matrix {0,1}^{n * nbclusters}
+% obj_value: the objective value of each iterations R^{1 * niterations}
+% F_vf: the final clustered data in multi-graph. a cell with V elements each of which is R^{n * nbclusters}
+% --- ref ---
+% Von Luxburg, Ulrike. "A tutorial on spectral clustering." Statistics and computing 17.4 (2007): 395-416.
 % 
-% then the algorithm used for organizing eigenvectors:
-% 'np' - generally used for 2 clusters, one eigenvector must be used, if
-% will put positive values in class 1 and negative values in class 2
-% 'kmean' - a k-mean algorithm will be used to cluster the given eigenvectors
-% 
-% finally an eigenvector choice can be added, it can be a vector [vmin
-% vmax] or a matrix defining several intervals. if not found the default
-% will be [2 2]
+% --- note ---(option)
 
-%% -----------------------
-
-% wmat \in R^{N*N} A in draft
-% dmat \in R^{N*N} D in draft
-
-%c is the number of clusters, d is dim of feature, n is number of samples
-% F \in R^{n*d}
-% Y \in {0,1}^{n*k}
-% C \in R^{k*d}
-%% ----------------------
-        
-%[d,n] = size(data);          
+% by Lance Liu 
 
 %% parameter setting
 niters = 100; % total number of interations

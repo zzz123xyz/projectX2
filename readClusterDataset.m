@@ -212,7 +212,7 @@ n = nc(1); clear nc;
 for i = 1:k
   X{i} = (X0{i}-repmat(min(X0{i},[],2),1,n))./...
   repmat(max(X0{i},[],2) - min(X0{i},[],2),1,n);
-  tmp = X{i}(~any(isnan(X{i}),2),:);
+  tmp = X{i}(~any(isnan(X{i}),2),:); %% there are a lot nan here in such as 6943 ?? what happens here
   X{i} = tmp;
 end
 data = X;

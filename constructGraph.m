@@ -1,4 +1,4 @@
-function A = constructGraph(data, nbclusters, method, param, varargin)
+function [A, param]= constructGraph(data, nbclusters, method, param, varargin)
 
 %%
 %by lance, 23 May 2016
@@ -11,6 +11,7 @@ function A = constructGraph(data, nbclusters, method, param, varargin)
 % param: parameters for the method.
 %output:
 % A_norm: normalized graph R^{n*n}
+% param: the new param obtained from where the CLR fails
 %%
 
 data = DataNormalization(data);
@@ -39,7 +40,16 @@ switch method
         wmat = full(SimGraph_Epsilon(data, param));
         
     case 'CLR'
-        [~, wmat] = CLR_main(data, nbclusters, param);
+        flag = 0;
+        while flag == 0
+            try
+                [~, wmat] = CLR_main(data, nbclusters, param);
+                flag = 1;
+            catch
+                warning('Problem: set new m value because nbclusters is less than number of connected components');
+                param = param + 1;
+            end
+        end
         
     case 'SelfTune'
         wmat = SelfTune(data, param);

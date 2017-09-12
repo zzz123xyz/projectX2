@@ -18,7 +18,7 @@ addpath('..\Animals_with_Attributes')
 %'HW',AWA4000,'ApAy','AWA_MDR','ApAy_MDR'(rename from
 %ApAy_MDR1,ApAy_MDR2... ),ApAy_MDR_R01R01R005, A
 %'USAA','USAA_MDR_R005'
-dataset_name = 'ApAy'; 
+dataset_name = 'MSRCV1'; 
 featType = 'all'; % default : all
 nreps = 1; % parameter  default : 1
 clusterResults = struct;
@@ -80,10 +80,10 @@ for i=1:nmethod
             end
              
             allResults = zeros(nreps,3);
+            
             for v = 1:nreps
                 [clusters, center] = kmeans(allData, nbclusters);
                 clusterResults.kmeans = clusters;
-                
                 %evaluation
                 [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
                 MIhat = MutualInfo(label_ind, clusters);
@@ -91,6 +91,7 @@ for i=1:nmethod
                 disp(MIhat);
                 singleResult = ClusteringMeasure(label_ind, clusters);
                 allResults(v,:) = singleResult;
+
             end
             result = mean(allResults,1); % result is average result;
             
@@ -132,7 +133,6 @@ for i=1:nmethod
                 for v = 1:nreps
                     [clusters, evalues, evectors] = spcl(data, nbclusters, sigma, 'sym', algochoices, eigv);
                     clusterResults.SPCL = clusters;
-                    
                     %evaluation
                     [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
                     MIhat = MutualInfo(label_ind, clusters);
@@ -140,6 +140,7 @@ for i=1:nmethod
                     disp(MIhat);
                     singleResult = ClusteringMeasure(label_ind, clusters);
                     allResults(v,:) = singleResult;
+                    
                 end
                 result = mean(allResults,1); % result is average result;
                 
@@ -172,7 +173,6 @@ for i=1:nmethod
             for v = 1:nreps
                 [clusters, evalues, evectors] = spclNaive(data, nbclusters, func, 'sym', algochoices, eigv);
                 clusterResults.SPCLNaive = clusters;
-                
                 %evaluation
                 [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
                 MIhat = MutualInfo(label_ind, clusters);
@@ -180,6 +180,7 @@ for i=1:nmethod
                 disp(MIhat);
                 singleResult = ClusteringMeasure(label_ind, clusters);
                 allResults(v,:) = singleResult;
+                
             end
             result = mean(allResults,1); % result is average result;
                           
@@ -399,6 +400,7 @@ for i=1:nmethod
                 pdpara = bestClusterPara.MVG.eta;
             end
             
+            maxResult = -inf; %predefine the varible to save the highest performance
             for t = -2:0.2:2
                 eta = 10^t;
                 
@@ -425,6 +427,11 @@ for i=1:nmethod
                     disp(MIhat);
                     singleResult = ClusteringMeasure(label_ind, clusters);
                     allResults(v,:) = singleResult;
+                    %obtain the clusters results from highest performance
+                    if mean(singleResult) > maxResult
+                       maxResult = mean(singleResult);
+                       clusterResults.MVG = clusters;
+                    end
                 end
                 result = mean(allResults,1); % result is average result;
                 
@@ -518,6 +525,7 @@ for i=1:nmethod
                 pdpara = bestClusterPara.MVMG.eta;
             end
             
+            maxResult = -inf; %predefine the varible to save the highest performance
             for t = -2:0.2:2
                 eta = 10^t;
                 
@@ -537,8 +545,7 @@ for i=1:nmethod
                     [C, Y, obj_value, data_clustered] = cl_mg_v2(data, nbclusters, eta, {sigma, [k sigma], epsilon, m}, 'sym', algochoices, eigv); %***
                     toc
                     [clusters,~,~] = find(Y');  %change label matrix into column
-                    clusterResults.MVMG = clusters;
-                    
+                     
                     %evaluation
                     [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
                     MIhat = MutualInfo(label_ind, clusters);
@@ -546,6 +553,12 @@ for i=1:nmethod
                     disp(MIhat);
                     singleResult = ClusteringMeasure(label_ind, clusters);
                     allResults(v,:) = singleResult;
+                    
+                    %obtain the clusters results from highest performance
+                    if mean(singleResult) > maxResult
+                       maxResult = mean(singleResult);
+                       clusterResults.MVMG = clusters;
+                    end
                 end
                 result = mean(allResults,1); % result is average result;
                 

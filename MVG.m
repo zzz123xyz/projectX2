@@ -1,8 +1,8 @@
-function [C_f, Y_f, obj_value, F_vf] = MVG (data, nbclusters, eta, eigv, method, param)
+function [C_f, Y_f, obj_value, F_vf, paramOne] = MVG (data, nbclusters, eta, eigv, method, param)
 
 %% ==========
 % for implimentation of 
-% JMVG
+% JMVC
 % Lance (Liangchen) Liu
 % input: 
 %   data: X feature matrix dim: R^{m*n} (m features & n samples)
@@ -15,6 +15,7 @@ function [C_f, Y_f, obj_value, F_vf] = MVG (data, nbclusters, eta, eigv, method,
 %   Y_f: predicted labels
 %   obj_value: objective value
 %   F_vf: the final projected data
+%   paramOne: the new paramOne obtained from where the CLR fails
 %% ==========
 
 
@@ -25,7 +26,7 @@ in_iters = 9; %increase iters
 V = numel(data);
 n = size(data{1},2);
 
-parfor v = 1:V
+for v = 1:V
     X = data{v};
     
     if isscalar(param)
@@ -33,7 +34,7 @@ parfor v = 1:V
     else
         paramOne = param(v);
     end
-    A_norm{v} = constructGraph(X, nbclusters, method, paramOne);
+    [A_norm{v}, paramOne] = constructGraph(X, nbclusters, method, paramOne);
     
     [U_,S,~] = svd(A_norm{v}, 'econ');
     U = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
