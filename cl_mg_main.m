@@ -12,6 +12,7 @@ addpath('..\project_MVCSS')
 addpath('..\clustering_eval_kun')
 addpath('..\ApAy_dataset')
 addpath('..\Animals_with_Attributes')
+addpath('ONGC')
 
 %% ==== dataset and global para ==== %!!!!
 %dataset_name = 'MSRCV1'; %'AWA','MSRCV1','NUSWIDEOBJ','Cal7','Cal20',
@@ -31,14 +32,14 @@ saveClusterResultsFile = ['results\clusterResults_',dataset_name,'.mat'];
 %methods = {'kmeans','SPCLNaive'};
 %methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
 %methods = {'SPCL'};
-methods = {'MVMG'};
+%methods = {'MVMG'};
 %methods = {'MVG'};
 %methods = {'CLR'};
 %methods = {'kmeans','SPCL','SPCLNaive'};
 %methods = {'MVG', 'CLR', 'MVMG'};
 %methods = {'SPCL', 'MVSC', 'MVG', 'CLR', 'MVMG'}; %chosen
 %methods = {'kmeans', 'SPCL', 'MVSC', 'MMSC', 'MVCSS', 'MVG', 'CLR', 'MVMG'};
-
+methods = {'ONGC'};
 
 %% ==== read dataset ====
 [data, label_ind] = readClusterDataset(dataset_name);
@@ -565,6 +566,53 @@ for i=1:nmethod
                 disp(['ACC, MIhat, Purity:',num2str(result)]);
                 fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
                 
+            end
+            
+            
+        case 'ONGC'
+            disp(method);
+            fprintf(fid, [method,'\n']);
+            anchorCreateMethod = 'kmeans';
+%             m = 300;
+%             r = 2;
+%             k = 5;
+%             p = nbclusters;
+            
+            m = 50;
+            r = 2;
+            k = 5;
+            p = nbclusters;
+            
+            fprintf(fid, 'anchorCreateMethod: %s \n', anchorCreateMethod);
+            fprintf(fid, 'm: %d \n', m);
+            fprintf(fid, 'r: %d \n', r);
+            fprintf(fid, 'k: %d \n', k);
+            fprintf(fid, 'p: %d \n\n', p);
+            
+            if iscell(data)
+                allData = cell2mat(data')';
+            else
+                allData = data;
+            end
+            
+            %mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5 ];
+            mu_vec = [1];
+            
+            for t = 1:numel(mu_vec)
+                mu = mu_vec(t);
+                
+                fprintf(fid, 'mu: %f \n', mu);
+                
+                for v = 1:nreps
+                    L = ULGE(allData, anchorCreateMethod, m, r, k, p);
+                    [clusters, F, oobj, mobj] = algONGC(L, nbclusters, mu);
+                    singleResult = ClusteringMeasure(label_ind, clusters);
+                    allResults(v,:) = singleResult;
+                end
+                result = mean(allResults,1); % result is average result;
+                
+                disp(['ACC, MIhat, Purity:',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
             end
     end
     
