@@ -19,19 +19,19 @@ addpath('ONGC')
 %'HW',AWA4000,'ApAy','AWA_MDR','ApAy_MDR'(rename from
 %ApAy_MDR1,ApAy_MDR2... ),ApAy_MDR_R01R01R005, A
 %'USAA','USAA_MDR_R005'
-dataset_name = 'MSRCV1'; 
+dataset_name = 'Cal20'; 
 featType = 'all'; % default : all
 nreps = 1; % parameter  default : 1
 clusterResults = struct;
 %bestClusterPara = getBestPara(dataset_name); % using best parameters if
 %there any !!!
-saveClusterResultsFile = ['results\clusterResults_',dataset_name,'.mat'];
+%saveClusterResultsFile = ['results\clusterResults_',dataset_name,'.mat'];
 
 %% ==== selecting methods ==== %!!!!
 %methods = {'kmeans'};
 %methods = {'kmeans','SPCLNaive'};
-%methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
-%methods = {'SPCL'};
+methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
+%methods = {'SPCL'}; % for single view
 %methods = {'MVMG'};
 %methods = {'MVG'};
 %methods = {'CLR'};
@@ -39,7 +39,7 @@ saveClusterResultsFile = ['results\clusterResults_',dataset_name,'.mat'];
 %methods = {'MVG', 'CLR', 'MVMG'};
 %methods = {'SPCL', 'MVSC', 'MVG', 'CLR', 'MVMG'}; %chosen
 %methods = {'kmeans', 'SPCL', 'MVSC', 'MMSC', 'MVCSS', 'MVG', 'CLR', 'MVMG'};
-methods = {'ONGC'};
+%methods = {'ONGC'};
 
 %% ==== read dataset ====
 [data, label_ind] = readClusterDataset(dataset_name);
@@ -59,6 +59,9 @@ name = dir('results/result_*');
 k = numel(name);
 ii = k+1;
 OutputFile = ['results/result_',num2str(ii,'%03i'),'_',dataset_name,'_',featType,'_',num2str(nbclusters),'_',fnPart,'ave_',num2str(nreps),'.txt'];
+saveClusterResultsFile = ['results/result_',num2str(ii,'%03i'),'_',dataset_name,'_',featType,'_',num2str(nbclusters),'_',fnPart,'ave_',num2str(nreps),'.mat'];
+
+try 
 fid = fopen(OutputFile, 'wt');
 fprintf(fid,['filename:',OutputFile,'\n']);
 fprintf(fid,['dataset:',dataset_name,'\n']);
@@ -620,6 +623,11 @@ end
 
 fclose(fid);
 save(saveClusterResultsFile,'clusterResults'); % uncomment while saving
+
+catch ME
+    fclose(fid);
+    rethrow(ME);    
+end
 
 load gong.mat;
 sound(y, 8*Fs);

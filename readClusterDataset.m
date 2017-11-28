@@ -29,9 +29,9 @@ else
     dataset_name = dataset_name_full(1:tmp(1)-1);
 end
 
-if ismember(dataset_name, {'NUS_lite', 'MSRCV1', 'AWA', 'ApAy', 'USAA'});
+if ismember(dataset_name, {'NUS_lite', 'MSRCV1', 'AWA', 'ApAy', 'USAA'})
     DatasetType = 1;
-elseif ismember(dataset_name, {'Cal7', 'Cal20', 'HW' ,'NUSWIDEOBJ', 'AWA4000','ApAy_MDR','AWA_MDR'});
+elseif ismember(dataset_name, {'Cal7', 'Cal20', 'HW' ,'NUSWIDEOBJ', 'AWA4000','ApAy_MDR','AWA_MDR'})
     DatasetType = 2;
 end
 

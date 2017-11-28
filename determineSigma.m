@@ -3,7 +3,7 @@ function sigma = determineSigma(data, type, param)
 % --- details ---
 
 % --- Input ---
-% data: input data (nsample * ndim) or data is a cell 
+% data: input data (ndim * nsample) or data is a cell 
 % type: choose a method to compute sigma
 % param: choose a percentage of data to compute the sigma
 
