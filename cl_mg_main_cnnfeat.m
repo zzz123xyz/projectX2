@@ -18,34 +18,34 @@ addpath('ONGC')
 %dataset_name = 'MSRCV1'; %'AWA','MSRCV1','NUSWIDEOBJ','Cal7','Cal20',
 %'HW',AWA4000,'ApAy','AWA_MDR','ApAy_MDR'(rename from
 %ApAy_MDR1,ApAy_MDR2... ),ApAy_MDR_R01R01R005, A
-%'USAA','USAA_MDR_R005'
-dataset_name = 'MSRCV1'; 
+%'USAA','USAA_MDR_R005', Cal20_cnn, Cal20_cnn_MDR512;
+dataset_name = 'Cal20_cnn_MDR512'; 
 featType = 'all'; % default : all
-nreps = 3; % parameter  default : 1
+nreps = 5; % parameter  default : 1
 clusterResults = struct;
-bestClusterPara = getBestPara(dataset_name); % using best parameters if
+%bestClusterPara = getBestPara(dataset_name); % using best parameters if
 %there any !!!
 %saveClusterResultsFile = ['results\clusterResults_',dataset_name,'.mat'];
 
 %% ==== selecting methods ==== %!!!!
+methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
 %methods = {'kmeans'};
-%methods = {'kmeans','SPCLNaive'};
-%methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
-methods = {'SPCL'}; % for single view
-%methods = {'MVMG'};
+%methods = {'SPCL'}; % for single view
+%methods = {'SPCLNaive'};
+%methods = {'MVSC'};
+%methods = {'MMSC'};
+%methods = {'MVCSS'};
 %methods = {'MVG'};
 %methods = {'CLR'};
-%methods = {'kmeans','SPCL','SPCLNaive'};
-%methods = {'MVG', 'CLR', 'MVMG'};
+%methods = {'MVMG'};
 %methods = {'SPCL', 'MVSC', 'MVG', 'CLR', 'MVMG'}; %chosen
 %methods = {'kmeans', 'SPCL', 'MVSC', 'MMSC', 'MVCSS', 'MVG', 'CLR', 'MVMG'};
 %methods = {'ONGC'};
 
 %% ==== read dataset ====
-[data, label_ind] = readClusterDataset(dataset_name);
-if ~strcmp(featType,'all')
-    data = data{str2double(featType)};
-end
+[~, label_ind] = readClusterDataset(dataset_name);
+data = readDeepFeat(dataset_name, featType);
+
 nbclusters = numel(unique(label_ind));  %nbclusters =  7, 
 nmethod = numel(methods);
 
@@ -75,6 +75,7 @@ for i=1:nmethod
     switch method
         case 'kmeans'
             %% kmeans
+            clusterResults.kmeans = []; %initialize clusterResults.kmeans
             disp(method);
             fprintf(fid, [method,'\n']);
             if iscell(data)
@@ -87,7 +88,7 @@ for i=1:nmethod
             
             for v = 1:nreps
                 [clusters, center] = kmeans(allData, nbclusters);
-                clusterResults.kmeans = clusters;
+                clusterResults.kmeans = [clusterResults.kmeans, clusters];
                 %evaluation
                 [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
                 MIhat = MutualInfo(label_ind, clusters);
@@ -99,11 +100,12 @@ for i=1:nmethod
             end
             result = mean(allResults,1); % result is average result;
             
-            disp(['ACC, MIhat, Purity:',num2str(result)]);
-            fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+            disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
+            fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
             
         case  'SPCL'
            %% spectral clustering
+            clusterResults.SPCL = []; %initialize clusterResults.SPCL
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -118,9 +120,8 @@ for i=1:nmethod
                 %the predefine sigma parameter 4.32 Cal20;
             end
             
-            for percent = 0.05: 0.05: 0.5 % default !!!
-                %percent = 0.1: 0.05: 0.5 % the following if block can not used for this line, consider to change ***
-                %
+            for percent = 0.1: 0.05: 0.5 % the following if block can not used for this line, consider to change ***
+                %percent = 0.05: 0.05: 0.5 % default !!!
                 
                 sigma = determineSigma(data, 1, percent);
                 
@@ -136,8 +137,9 @@ for i=1:nmethod
                 
                 allResults = zeros(nreps,4);
                 for v = 1:nreps
-                    [clusters, evalues, evectors] = spcl(data, nbclusters, sigma, 'sym', algochoices, eigv);
-                    clusterResults.SPCL = clusters;
+                    [clusters, evalues, evectors] = spcl...
+                        (data, nbclusters, sigma, 'sym', algochoices, eigv);
+                    clusterResults.SPCL = [clusterResults.SPCL, clusters];
                     %evaluation
                     [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
                     MIhat = MutualInfo(label_ind, clusters);
@@ -149,8 +151,8 @@ for i=1:nmethod
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity F1score: ',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
+                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
             end
             
         case 'SPCLNaive'
@@ -159,6 +161,7 @@ for i=1:nmethod
             % the summation of five Laplacian matrix corresponding
             % to each single modal)
             
+            clusterResults.SPCLNaive = []; %initialize clusterResults.SPCLNaive
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -176,8 +179,9 @@ for i=1:nmethod
             %                 fprintf(fid, 'sigma: %f \n', sigma);
             allResults = zeros(nreps,4);
             for v = 1:nreps
-                [clusters, evalues, evectors] = spclNaive(data, nbclusters, func, 'sym', algochoices, eigv);
-                clusterResults.SPCLNaive = clusters;
+                [clusters, evalues, evectors] = spclNaive...
+                    (data, nbclusters, func, 'sym', algochoices, eigv);
+                clusterResults.SPCLNaive = [clusterResults.SPCLNaive, clusters];
                 %evaluation
                 [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
                 MIhat = MutualInfo(label_ind, clusters);
@@ -189,14 +193,16 @@ for i=1:nmethod
             end
             result = mean(allResults,1); % result is average result;
                           
-            disp(['ACC, MIhat, Purity:',num2str(result)]);
-            fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+            disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
+            fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
             
         case 'MVSC'
             %% MVSC
             % Li, Y., Nie, F., Huang, H., & Huang, J. (2015, January).
             % Large-Scale Multi-View Spectral Clustering via Bipartite Graph.
             % In AAAI (pp. 2750-2756).
+            
+            clusterResults.MVSC = []; %initialize clusterResults.MVSC
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -238,10 +244,10 @@ for i=1:nmethod
                 allResults = zeros(nreps,4);
                 for v = 1:nreps
                     
-                    [clusters0, ~, obj_value, nbData] = MVSC(data, nbclusters, nbSltPnt, k, gamma, ...
-                        func, sigma);
+                    [clusters0, ~, obj_value, nbData] = MVSC...
+                        (data, nbclusters, nbSltPnt, k, gamma, func, sigma);
                     clusters = clusters0(1:nbData);
-                    clusterResults.MVSC = clusters;
+                    clusterResults.MVSC = [clusterResults.MVSC, clusters];
                     
                     %evaluation
                     [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
@@ -253,8 +259,8 @@ for i=1:nmethod
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n']);
+                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n']);
             end
             fprintf(fid, '\n');
             
@@ -263,6 +269,8 @@ for i=1:nmethod
             %Cai, Xiao, et al. "Heterogeneous image feature integration via multi-modal
             %spectral clustering." Computer Vision and Pattern Recognition (CVPR),
             %2011 IEEE Conference on. IEEE, 2011.
+            
+            clusterResults.MMSC = []; %initialize clusterResults.MMSC
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -305,7 +313,7 @@ for i=1:nmethod
                         [clusters,~,~] = find(Y');  %change label matrix into column
                     end
                     
-                    clusterResults.MMSC = clusters;
+                    clusterResults.MMSC = [clusterResults.MMSC, clusters];
                     
                     %evaluation
                     [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
@@ -317,8 +325,8 @@ for i=1:nmethod
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n']);
+                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n']);
             end
             fprintf(fid, '\n');
             
@@ -327,6 +335,8 @@ for i=1:nmethod
             % Multi-View Clustering and Feature Learning via Structured Sparsity
             % Wang, Hua, Feiping Nie, and Heng Huang. "Multi-view clustering and feature learning via structured sparsity."
             % Proceedings of the 30th International Conference on Machine Learning (ICML-13). 2013.
+            
+            clusterResults.MVCSS = []; %initialize clusterResults.MVCSS
             disp(method);
             fprintf(fid, [method,'\n\n']);
             
@@ -365,8 +375,9 @@ for i=1:nmethod
                     
                     allResults = zeros(nreps,4);
                     for v = 1:nreps
-                        [clusters, obj_value, F_record] = multi_view_fusion(data, nbclusters, gamma1, gamma2); % do pca on data first, No you can use pinv, right?
-                        clusterResults.MVCSS = clusters;
+                        [clusters, obj_value, F_record] = multi_view_fusion...
+                            (data, nbclusters, gamma1, gamma2); % do pca on data first, No you can use pinv, right?
+                        clusterResults.MVCSS = [clusterResults.MVCSS, clusters];
                         
                         %evaluation
                         [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
@@ -378,8 +389,8 @@ for i=1:nmethod
                     end
                     result = mean(allResults,1); % result is average result;
                     
-                    disp(['ACC, MIhat, Purity:',num2str(result)]);
-                    fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+                    disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
+                    fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
                 end
             end
             
@@ -387,15 +398,15 @@ for i=1:nmethod
         case 'MVG'
             %% MVG
             % multi-view single graph joint clustering
+            
+            clusterResults.MVG = []; %initialize clusterResults.MVG
             disp(method);
             fprintf(fid, [method,'\n']);
             
-            m = 9; % the best setting from experiment in CLR
-            if strncmpi(dataset_name,'ApAy_MDR',8) 
-                %compare first 8 char to determine if the dataset is ApAy_MDR
+            m = 9;
+            if strncmpi(dataset_name,'ApAy_MDR',8)
                 m = [9, 9, 30];
             elseif  strncmpi(dataset_name,'USAA',4)
-                %compare first 4 char to determine if the dataset is USAA
                 m = 8;
             end
             
@@ -425,7 +436,7 @@ for i=1:nmethod
                 for v = 1:nreps
                     [C, Y, obj_value, data_clustered] = MVG(data, nbclusters, eta, eigv, 'CLR', m); %***
                     [clusters,~,~] = find(Y');  %change label matrix into column
-                    clusterResults.MVG = clusters;
+                    clusterResults.MVG = [clusterResults.MVG, clusters];
                     
                     %evaluation
                     [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
@@ -436,14 +447,15 @@ for i=1:nmethod
                     allResults(v,:) = singleResult;
                     %obtain the clusters results from highest performance
                     if mean(singleResult) > maxResult
-                       maxResult = mean(singleResult);
-                       clusterResults.MVG = clusters;
+                        maxResult = mean(singleResult);
+                        clusterBestResults.MVG.result = clusters;
+                        clusterBestResults.MVG.para.eta = eta;
                     end
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
             end
             
             fprintf(fid, '\n');
@@ -451,6 +463,8 @@ for i=1:nmethod
         case 'CLR'
             %% CLR
             % Nie, Feiping, et al. "The Constrained Laplacian Rank Algorithm for Graph-Based Clustering." (2016).
+            
+            clusterResults.CLR = []; %initialize clusterResults.CLR
             disp(method);
             fprintf(fid, [method,'\n\n']);
             
@@ -502,8 +516,8 @@ for i=1:nmethod
                 result = mean(allResults,1); % result is average result;
                 
                 fprintf(fid, 'm: %d \n', m);
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
             end
             fprintf(fid, '\n');
             
@@ -511,6 +525,8 @@ for i=1:nmethod
             %% MVMG
             % multi-graph joint spectral clustering
             %[C, obj_value, data_clustered] = cl_mg(data, nbclusters, {sigma, sigma, epsilon}, 'sym', 'kmean', [1 28]); %***
+            
+            clusterResults.MVMG = []; %initialize clusterResults.MVMG
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -564,18 +580,21 @@ for i=1:nmethod
                     %obtain the clusters results from highest performance
                     if mean(singleResult) > maxResult
                        maxResult = mean(singleResult);
-                       clusterResults.MVMG = clusters;
+                       clusterBestResults.MVMG.result = clusters;
+                       clusterBestResults.MVMG.para.eta = eta;
                     end
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
                 
             end
             
             
         case 'ONGC'
+            
+            clusterResults.ONGC = []; %initialize clusterResults.ONGC
             disp(method);
             fprintf(fid, [method,'\n']);
             anchorCreateMethod = 'kmeans';
@@ -617,15 +636,15 @@ for i=1:nmethod
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity:',num2str(result),'\n\n']);
+                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
             end
     end
     
 end
 
 fclose(fid);
-save(saveClusterResultsFile,'clusterResults'); % uncomment while saving
+save(saveClusterResultsFile,'clusterResults','clusterBestResults'); % uncomment while saving
 
 catch ME
     fclose(fid);

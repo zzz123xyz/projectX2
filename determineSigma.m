@@ -5,7 +5,7 @@ function sigma = determineSigma(data, type, param)
 % --- Input ---
 % data: input data (ndim * nsample) or data is a cell 
 % type: choose a method to compute sigma
-% param: choose a percentage of data to compute the sigma
+% param: an empirical hyper parameter may relate to the percentage of data to compute the sigma
 
 % --- output ----
 % sigma: the parameter sigma in neighbourhood graph construction

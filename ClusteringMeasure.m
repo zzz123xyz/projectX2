@@ -26,17 +26,18 @@ predY0 = zeros(n,1);
 if nclass ~= max(predY)
     for i = 1:nclass
         predY0(find(predY == uY(i))) = i;
-    end;
+    end
     predY = predY0;
-end;
+end
 
 Lidx = unique(Y); classnum = length(Lidx);
 predLidx = unique(predY); pred_classnum = length(predLidx);
 
-GTpairL = pdist(Lidx);
-prepairL = pdist(predLidx);
+% F1score %problem here ???
+GTpairL = pdist(Y)==0;
+prepairL = pdist(predY)==0;
 a = sum(GTpairL.*prepairL);
-bc = xor(GTpairL, prepairL);
+bc = sum(xor(GTpairL, prepairL));
 F1score = 2*a/(2*a + bc);
 
 % purity
