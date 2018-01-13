@@ -21,16 +21,16 @@ addpath('ONGC')
 %'USAA','USAA_MDR_R005'
 dataset_name = 'HW'; 
 featType = 'all'; % default : all
-nreps = 5; % parameter  default : 1
+nreps = 3; % parameter  default : 1
 clusterResults = struct;
-%bestClusterPara = getBestPara(dataset_name); % using best parameters if
+bestClusterPara = getBestPara(dataset_name); % using best parameters if
 %there any !!!
 %saveClusterResultsFile = ['results\clusterResults_',dataset_name,'.mat'];
 
 %% ==== selecting methods ==== %!!!!
 %methods = {'kmeans'};
 %methods = {'kmeans','SPCLNaive'};
-methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
+%methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
 %methods = {'SPCL'}; % for single view
 %methods = {'MVMG'};
 %methods = {'MVG'};
@@ -39,7 +39,7 @@ methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}
 %methods = {'MVG', 'CLR', 'MVMG'};
 %methods = {'SPCL', 'MVSC', 'MVG', 'CLR', 'MVMG'}; %chosen
 %methods = {'kmeans', 'SPCL', 'MVSC', 'MMSC', 'MVCSS', 'MVG', 'CLR', 'MVMG'};
-%methods = {'ONGC'};
+methods = {'ONGC'};
 
 %% ==== read dataset ====
 [data, label_ind] = readClusterDataset(dataset_name);
@@ -75,6 +75,7 @@ for i=1:nmethod
     switch method
         case 'kmeans'
             %% kmeans
+            clusterResults.kmeans = []; %initialize clusterResults.kmeans
             disp(method);
             fprintf(fid, [method,'\n']);
             if iscell(data)
@@ -104,6 +105,7 @@ for i=1:nmethod
             
         case  'SPCL'
            %% spectral clustering
+            clusterResults.SPCL = []; %initialize clusterResults.SPCL
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -118,8 +120,10 @@ for i=1:nmethod
                 %the predefine sigma parameter 4.32 Cal20;
             end
             
-            for percent = 0.1: 0.05: 0.5 % the following if block can not used for this line, consider to change ***
-                %percent = 0.05: 0.05: 0.5 % default !!!
+            for percent = 0.05: 0.05: 0.5 % default !!!
+                %percent = 0.1: 0.05: 0.5 % the following if block can 
+                        %not be used for this line, consider to change ***
+                
                 
                 sigma = determineSigma(data, 1, percent);
                 
@@ -158,6 +162,7 @@ for i=1:nmethod
             % the summation of five Laplacian matrix corresponding
             % to each single modal)
             
+            clusterResults.SPCLNaive = []; %initialize clusterResults.SPCLNaive
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -196,6 +201,8 @@ for i=1:nmethod
             % Li, Y., Nie, F., Huang, H., & Huang, J. (2015, January).
             % Large-Scale Multi-View Spectral Clustering via Bipartite Graph.
             % In AAAI (pp. 2750-2756).
+            
+            clusterResults.MVSC = []; %initialize clusterResults.MVSC
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -262,6 +269,8 @@ for i=1:nmethod
             %Cai, Xiao, et al. "Heterogeneous image feature integration via multi-modal
             %spectral clustering." Computer Vision and Pattern Recognition (CVPR),
             %2011 IEEE Conference on. IEEE, 2011.
+            
+            clusterResults.MMSC = []; %initialize clusterResults.MMSC
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -326,6 +335,8 @@ for i=1:nmethod
             % Multi-View Clustering and Feature Learning via Structured Sparsity
             % Wang, Hua, Feiping Nie, and Heng Huang. "Multi-view clustering and feature learning via structured sparsity."
             % Proceedings of the 30th International Conference on Machine Learning (ICML-13). 2013.
+            
+            clusterResults.MVCSS = []; %initialize clusterResults.MVCSS
             disp(method);
             fprintf(fid, [method,'\n\n']);
             
@@ -386,6 +397,8 @@ for i=1:nmethod
         case 'MVG'
             %% MVG
             % multi-view single graph joint clustering
+            
+            clusterResults.MVG = []; %initialize clusterResults.MVG
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -450,6 +463,8 @@ for i=1:nmethod
         case 'CLR'
             %% CLR
             % Nie, Feiping, et al. "The Constrained Laplacian Rank Algorithm for Graph-Based Clustering." (2016).
+            
+            clusterResults.CLR = []; %initialize clusterResults.CLR
             disp(method);
             fprintf(fid, [method,'\n\n']);
             
@@ -510,6 +525,8 @@ for i=1:nmethod
             %% MVMG
             % multi-graph joint spectral clustering
             %[C, obj_value, data_clustered] = cl_mg(data, nbclusters, {sigma, sigma, epsilon}, 'sym', 'kmean', [1 28]); %***
+            
+            clusterResults.MVMG = []; %initialize clusterResults.MVMG
             disp(method);
             fprintf(fid, [method,'\n']);
             
@@ -575,24 +592,10 @@ for i=1:nmethod
             
             
         case 'ONGC'
+            
+            clusterResults.ONGC = []; %initialize clusterResults.ONGC
             disp(method);
             fprintf(fid, [method,'\n']);
-            anchorCreateMethod = 'kmeans';
-%             m = 300;
-%             r = 2;
-%             k = 5;
-%             p = nbclusters;
-            
-            m = 50;
-            r = 2;
-            k = 5;
-            p = nbclusters;
-            
-            fprintf(fid, 'anchorCreateMethod: %s \n', anchorCreateMethod);
-            fprintf(fid, 'm: %d \n', m);
-            fprintf(fid, 'r: %d \n', r);
-            fprintf(fid, 'k: %d \n', k);
-            fprintf(fid, 'p: %d \n\n', p);
             
             if iscell(data)
                 allData = cell2mat(data')';
@@ -600,31 +603,90 @@ for i=1:nmethod
                 allData = data;
             end
             
-            %mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5 ];
-            mu_vec = [1];
+            nsample = size(allData,1);
             
-            for t = 1:numel(mu_vec)
-                mu = mu_vec(t);
+            %% setting for ONGC 
+            anchorCreateMethod = 'kmeans';
+            maxResult = -inf; %predefine the varible to save the highest performance
+            %             m = 300; for test other
+            %             m = 300; for test MSCR_v1
+            %             r = 2;
+            %             k = 5;
+            %             p = nbclusters;
+            r = 1;
+            k = 5; %default setting in ULGE paper
+            p = nbclusters;
+            %spl_ratio = 0.04: 0.02: 0.2; %default !!!!
+            spl_ratio = 0.1;
+            nratio = numel(spl_ratio);
+            iniMethod = 'SPCL'; % SPCL or random %initialisation method for ONGC
+            
+            fprintf(fid, 'anchorCreateMethod: %s \n', anchorCreateMethod);
+            fprintf(fid, 'r: %d \n', r);
+            fprintf(fid, 'k: %d \n', k);
+            fprintf(fid, 'p: %d \n\n', p);
+            
+            %% ======
+            for j = 1:nratio
                 
-                fprintf(fid, 'mu: %f \n', mu);
+                m = round(spl_ratio(j)*nsample);
                 
-                for v = 1:nreps
-                    L = ULGE(allData, anchorCreateMethod, m, r, k, p);
-                    [clusters, F, oobj, mobj] = algONGC(L, nbclusters, mu);
-                    singleResult = ClusteringMeasure(label_ind, clusters);
-                    allResults(v,:) = singleResult;
+                fprintf(fid, 'm: %d \n', m); 
+                
+                %mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5 ]; %default !!!!
+                mu_vec = [1];
+                
+                for t = 1:numel(mu_vec)
+                    mu = mu_vec(t);
+                    
+                    fprintf(fid, 'mu: %f \n', mu);
+                    
+                    for v = 1:nreps
+                        
+                        %!!!!
+%                         % use ULGE graph
+%                         L = ULGE(allData, anchorCreateMethod, m, r, k, p);
+                        
+                        % use normal gaussian graph
+                        sigma = determineSigma(allData', 1, 0.15);
+                        wmat = SimGraph_Full(allData', sigma);
+                        dmat = diag(sum(wmat, 2));
+                        L = (dmat^-0.5) * wmat * (dmat^-0.5);
+                        
+                        [clusters, F, oobj, mobj] = algONGC(L, nbclusters, mu, iniMethod);
+                        singleResult = ClusteringMeasure(label_ind, clusters);
+                        allResults(v,:) = singleResult;
+                        
+                        %obtain the clusters results from highest performance
+                        if mean(singleResult) > maxResult
+                            maxResult = mean(singleResult);
+                            clusterBestResults.ONGC.result = clusters;
+                            clusterBestResults.ONGC.para.m = m;
+                            clusterBestResults.ONGC.para.mu = mu;
+                        end
+                    end
+                    result = mean(allResults,1); % result is average result;
+                    
+                    disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
+                    fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
                 end
-                result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
             end
+            
+       case 'newMethodTest'
+           
+           r = 1;
+            k = 5; %default setting in ULGE paper
+            p = nbclusters;
+           
+            L = ULGE(allData, anchorCreateMethod, m, r, k, p);
+           
     end
     
 end
 
 fclose(fid);
-save(saveClusterResultsFile,'clusterResults'); % uncomment while saving
+save(saveClusterResultsFile,'clusterResults','clusterBestResults'); % uncomment while saving
 
 catch ME
     fclose(fid);
