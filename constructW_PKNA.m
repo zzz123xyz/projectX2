@@ -1,4 +1,4 @@
-function W = constructW_PKNA(X, U, k, issymmetric)
+function W = constructW_PKNA(X, U, k, m)
 
 %% constructW_PKNA function (modified from constructW_PKN)
 % construct similarity matrix with probabilistic k-nearest neighbors. 
@@ -12,6 +12,7 @@ function W = constructW_PKNA(X, U, k, issymmetric)
 % X: each column is a data point
 % U: anchor matrix
 % k: number of neighbors
+% m: number of anchors
 % issymmetric: set W = (W+W')/2 if issymmetric=1
 % W: similarity matrix
 
@@ -24,9 +25,6 @@ function W = constructW_PKNA(X, U, k, issymmetric)
 
 % by Lance Liu 
 
-if nargin < 3
-    issymmetric = 1;
-end
 if nargin < 2
     k = 5;
 end
@@ -35,21 +33,15 @@ end
 D = L2_distance_1(X, U);
 [dumb, idx] = sort(D, 2); % sort each row
 
-W = zeros(n);
+W = zeros(n,m);
 for i = 1:n
-    id = idx(i,1:k+1);% it's different from constructW_PKN, here is to compute
+    id = idx(i,:);% it's different from constructW_PKN, here is to compute
     %anchor point. In constructW_PKN is to compute normal nearest neighbors.
     di = D(i, id);
     W(i,id) = (di(k+1)-di)/(k*di(k+1)-sum(di(1:k))+eps); %in (di(k+1)-di), 
     %the last k+1 elemet is substracted to 0, so has no effect on final
     %graph
-end;
-
-if issymmetric == 1
-    W = (W+W')/2;
-end;
-
-
+end
 
 
 % compute squared Euclidean distance

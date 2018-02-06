@@ -21,19 +21,30 @@ function [clusters, F, oobj, mobj] = algONGC(L, m, mu, iniMethod)
 
 % by Lance Liu 
 
-%% initialisation
+% parameter setting
 lapmatrixchoice = 'sym';
 eigv = [1 m];
-niters = 100;
+
+%% iters setting !!!!
+%niters = 30;  % for usual case
+niters = 100;  % for converge analysis
+
+%% initialisation
 I = eye(size(L));
 n = size(L,1);
 L1 = L-2*mu*I;
-alpha = eigs(L1,1);
+eig_vec = eig(L1);
+alpha = max(eig_vec);
 
-if strcmp(iniMethod, 'random')
-%% random initialisation
+if strcmp(iniMethod, 'orth_random')
+% random initialisation
 G = orth(rand(n,m));
 F = orth(rand(n,m));
+
+elseif strcmp(iniMethod, 'random')
+%% random initialisation
+G = rand(n,m);
+F = rand(n,m);
 
 elseif strcmp(iniMethod, 'SPCL')
 %% SPCL initialisation
@@ -73,7 +84,8 @@ mobj1 = trace(F'*L*G)+mu*norm(F-G,'fro');
 
 for i = 1:niters
     %% solve F fix G
-    M = (alpha*I - L1)*G;
+    M = ((alpha+eps)*I - L1)*G;
+%     M = ((alpha+10000*eps)*I - L1)*G; %for test
     [U, S, V]=svd(M, 'econ');
     F = U*V';
     F_iter{i} = F;
@@ -88,5 +100,8 @@ for i = 1:niters
     oobj(i) = trace(F'*L*F);
     mobj(i) = trace(F'*L*G)+mu*norm(F-G,'fro');
 end
+
+oobj = [oobj1,oobj];
+mobj = [mobj1,mobj];
 
 clusters = kmeans(F, m);

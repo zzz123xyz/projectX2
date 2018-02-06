@@ -18,8 +18,9 @@ addpath('ONGC')
 %dataset_name = 'MSRCV1'; %'AWA','MSRCV1','NUSWIDEOBJ','Cal7','Cal20',
 %'HW',AWA4000,'ApAy','AWA_MDR','ApAy_MDR'(rename from
 %ApAy_MDR1,ApAy_MDR2... ),ApAy_MDR_R01R01R005, A
-%'USAA','USAA_MDR_R005', Cal20_cnn, Cal20_cnn_MDR512;
-dataset_name = 'Cal20_cnn_MDR512'; 
+%'USAA','USAA_MDR_R005', Cal20_cnn, Cal20_cnn_MDR512, ApAy_cnn_MDR512;
+% ApAy_trn_cnn_MDR512
+dataset_name = 'ApAy_trn_cnn_MDR512'; 
 featType = 'all'; % default : all
 nreps = 5; % parameter  default : 1
 clusterResults = struct;
@@ -28,7 +29,7 @@ clusterResults = struct;
 %saveClusterResultsFile = ['results\clusterResults_',dataset_name,'.mat'];
 
 %% ==== selecting methods ==== %!!!!
-methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
+%methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
 %methods = {'kmeans'};
 %methods = {'SPCL'}; % for single view
 %methods = {'SPCLNaive'};
@@ -40,7 +41,7 @@ methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}
 %methods = {'MVMG'};
 %methods = {'SPCL', 'MVSC', 'MVG', 'CLR', 'MVMG'}; %chosen
 %methods = {'kmeans', 'SPCL', 'MVSC', 'MMSC', 'MVCSS', 'MVG', 'CLR', 'MVMG'};
-%methods = {'ONGC'};
+methods = {'ONGC'};
 
 %% ==== read dataset ====
 [~, label_ind] = readClusterDataset(dataset_name);
@@ -100,8 +101,8 @@ for i=1:nmethod
             end
             result = mean(allResults,1); % result is average result;
             
-            disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
-            fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
+            disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
+            fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
             
         case  'SPCL'
            %% spectral clustering
@@ -109,7 +110,7 @@ for i=1:nmethod
             disp(method);
             fprintf(fid, [method,'\n']);
             
-            algochoices = 'kmean';
+            algochoices = 'kmeans';
             fprintf(fid, 'algochoices: %s \n', algochoices);
             
             eigv = [1 nbclusters]; %eigv = [1 28], [2 2], [1 nbclusters];
@@ -120,8 +121,8 @@ for i=1:nmethod
                 %the predefine sigma parameter 4.32 Cal20;
             end
             
-            for percent = 0.1: 0.05: 0.5 % the following if block can not used for this line, consider to change ***
-                %percent = 0.05: 0.05: 0.5 % default !!!
+            for percent = 0.05: 0.05: 0.5 % the following if block can not used for this line, consider to change ***
+                %percent = 0.1: 0.05: 0.5 % default !!!
                 
                 sigma = determineSigma(data, 1, percent);
                 
@@ -151,8 +152,8 @@ for i=1:nmethod
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
+                disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
             end
             
         case 'SPCLNaive'
@@ -168,7 +169,7 @@ for i=1:nmethod
             func = 'gaussdist';
             fprintf(fid, 'fun: %s \n', func);
             
-            algochoices = 'kmean';
+            algochoices = 'kmeans';
             fprintf(fid, 'algochoices: %s \n', algochoices);
             
             eigv = [1 nbclusters]; %eigv = [1 28], [2 2], [1 nbclusters];
@@ -193,8 +194,8 @@ for i=1:nmethod
             end
             result = mean(allResults,1); % result is average result;
                           
-            disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
-            fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
+            disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
+            fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
             
         case 'MVSC'
             %% MVSC
@@ -259,8 +260,8 @@ for i=1:nmethod
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n']);
+                disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n']);
             end
             fprintf(fid, '\n');
             
@@ -325,8 +326,8 @@ for i=1:nmethod
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n']);
+                disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n']);
             end
             fprintf(fid, '\n');
             
@@ -389,8 +390,8 @@ for i=1:nmethod
                     end
                     result = mean(allResults,1); % result is average result;
                     
-                    disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
-                    fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
+                    disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
+                    fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
                 end
             end
             
@@ -454,8 +455,8 @@ for i=1:nmethod
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
+                disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
             end
             
             fprintf(fid, '\n');
@@ -494,7 +495,7 @@ for i=1:nmethod
                     try
                         for v = 1:nreps
                             [clusters, S, evectors, cs] = CLR_main(AllDataMatrix, nbclusters, m);
-                            clusterResults.CLR = clusters;
+                            clusterResults.CLR = [clusterResults.CLR, clusters];
                             
                             %evaluation
                             [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
@@ -516,21 +517,21 @@ for i=1:nmethod
                 result = mean(allResults,1); % result is average result;
                 
                 fprintf(fid, 'm: %d \n', m);
-                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
+                disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
             end
             fprintf(fid, '\n');
             
         case 'MVMG'
             %% MVMG
             % multi-graph joint spectral clustering
-            %[C, obj_value, data_clustered] = cl_mg(data, nbclusters, {sigma, sigma, epsilon}, 'sym', 'kmean', [1 28]); %***
+            %[C, obj_value, data_clustered] = cl_mg(data, nbclusters, {sigma, sigma, epsilon}, 'sym', 'kmeans', [1 28]); %***
             
             clusterResults.MVMG = []; %initialize clusterResults.MVMG
             disp(method);
             fprintf(fid, [method,'\n']);
             
-            algochoices = 'kmean';
+            algochoices = 'kmeans';
             %sigma = 3000;
             m = 9; % the best setting from experiment in CLR
             sigma = determineSigma(data, 1, 0.15);
@@ -568,7 +569,8 @@ for i=1:nmethod
                     [C, Y, obj_value, data_clustered] = cl_mg_v2(data, nbclusters, eta, {sigma, [k sigma], epsilon, m}, 'sym', algochoices, eigv); %***
                     toc
                     [clusters,~,~] = find(Y');  %change label matrix into column
-                     
+                    clusterResults.MVMG = [clusterResults.MVMG, clusters]; 
+                    
                     %evaluation
                     [~,RI,~,~] = valid_RandIndex(label_ind, clusters);
                     MIhat = MutualInfo(label_ind, clusters);
@@ -586,8 +588,8 @@ for i=1:nmethod
                 end
                 result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
+                disp(['ACC, MIhat, Purity, F1score: ',num2str(result)]);
+                fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
                 
             end
             
@@ -597,54 +599,116 @@ for i=1:nmethod
             clusterResults.ONGC = []; %initialize clusterResults.ONGC
             disp(method);
             fprintf(fid, [method,'\n']);
-            anchorCreateMethod = 'kmeans';
-%             m = 300;
-%             r = 2;
-%             k = 5;
-%             p = nbclusters;
-            
-            m = 50;
-            r = 2;
-            k = 5;
-            p = nbclusters;
-            
-            fprintf(fid, 'anchorCreateMethod: %s \n', anchorCreateMethod);
-            fprintf(fid, 'm: %d \n', m);
-            fprintf(fid, 'r: %d \n', r);
-            fprintf(fid, 'k: %d \n', k);
-            fprintf(fid, 'p: %d \n\n', p);
             
             if iscell(data)
                 allData = cell2mat(data')';
             else
-                allData = data;
+                allData = data';
             end
             
-            %mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5 ];
-            mu_vec = [1];
+            nsample = size(allData,1);
             
-            for t = 1:numel(mu_vec)
-                mu = mu_vec(t);
+            %% setting for ONGC !!!
+            anchorCreateMethod = 'kmeans';
+            maxResult = -inf; %predefine the varible to save the highest performance
+            %             m = 300; for test other
+            %             m = 300; for test MSCR_v1
+            %             r = 2;
+            %             k = 5;
+            %             p = nbclusters;
+            r = 2; %the decimation factor is set as 10 for all data sets 1 for Cal20_cnn, 5 for ApAy_cnn
+            %except USPS which is set as 3 in ULGE paper. !!!
+            k = 5; %default setting in ULGE paper
+            p = nbclusters;
+            
+            %!!!
+            spl_ratio = 0.04: 0.02: 0.2; %default !!!!
+            % spl_ratio = 0.1: 0.02: 0.2; %default for msrcv1 !!!!
+            % spl_ratio = 0.1; %for single test !!!
+            nratio = numel(spl_ratio);
+            iniMethod = 'orth_random'; % SPCL or random %initialisation method for ONGC
+            paraMode = 'grid';
+            
+            if strcmp(paraMode,'grid')
+                %mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5 ]; %default !!!!
+                mu_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100]; %new default !!!!
+                %mu_vec = [1];
+            elseif strcmp(paraMode,'rand')
+                a = -2;
+                b = 2;     
+                nmu = 20;
+                mu_vec = 10.^((b-a).*rand(nmu,1) + a);
+            end
+            %% =========
+            
+            fprintf(fid, 'anchorCreateMethod: %s \n', anchorCreateMethod);
+            fprintf(fid, 'r: %d \n', r);
+            fprintf(fid, 'k: %d \n', k);
+            fprintf(fid, 'p: %d \n\n', p);
+            
+            %% ======
+            for j = 1:nratio
                 
-                fprintf(fid, 'mu: %f \n', mu);
+                m = round(spl_ratio(j)*nsample);
                 
-                for v = 1:nreps
-                    L = ULGE(allData, anchorCreateMethod, m, r, k, p);
-                    [clusters, F, oobj, mobj] = algONGC(L, nbclusters, mu);
-                    singleResult = ClusteringMeasure(label_ind, clusters);
-                    allResults(v,:) = singleResult;
+                fprintf(fid, 'm: %d \n', m);
+                
+                %!!!!
+%                 % use ULGE graph
+%                 L = ULGE(allData, anchorCreateMethod, m, r, k, p);
+                
+                % use normal gaussian graph
+                sigma = determineSigma(allData', 1, 0.15);
+                wmat = SimGraph_Full(allData', sigma);
+                dmat = diag(sum(wmat, 2));
+                L = eye(nsample) - (dmat^-0.5) * wmat * (dmat^-0.5);
+                % L = (dmat^-0.5) * wmat * (dmat^-0.5);
+                
+                for t = 1:numel(mu_vec)
+                    mu = mu_vec(t);
+                    fprintf(fid, 'mu: %f \n', mu);
+                    
+                    for v = 1:nreps
+                        
+                        [clusters, F, oobj, mobj] = algONGC(L, nbclusters, mu, iniMethod);
+                        % [clusters, F, oobj, mobj] = algONGC(L,round(nsample/2), mu, iniMethod);%for test
+                        clusterResults.ONGC = [clusterResults.ONGC, clusters];
+                        
+                        %evaluation
+                        singleResult = ClusteringMeasure(label_ind, clusters);
+                        allResults(v,:) = singleResult;
+                        
+                        %obtain the clusters results from highest performance
+                        if mean(singleResult) > maxResult
+                            maxResult = mean(singleResult);
+                            clusterBestResults.ONGC.result = clusters;
+                            clusterBestResults.ONGC.para.m = m;
+                            clusterBestResults.ONGC.para.mu = mu;
+                            
+                        end
+                    end
+                    result = mean(allResults,1); % result is average result;
+                    SEM = std(allResults, 0, 1)/sqrt(length(nreps));
+                    
+                    disp(['ACC, MIhat, Purity, F1score: ',num2str(result),...
+                        ' SEM: ',num2str(SEM),'\n\n']);
+                    %fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
+                    fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),...
+                        ' SEM: ',num2str(SEM),'\n\n']);
                 end
-                result = mean(allResults,1); % result is average result;
                 
-                disp(['ACC, MIhat, Purity, F1score:',num2str(result)]);
-                fprintf(fid, ['ACC, MIhat, Purity, F1score:',num2str(result),'\n\n']);
             end
     end
     
 end
 
 fclose(fid);
-save(saveClusterResultsFile,'clusterResults','clusterBestResults'); % uncomment while saving
+
+if exist('clusterBestResults','var')
+    save(saveClusterResultsFile,'clusterResults','clusterBestResults'); % uncomment while saving
+else
+    save(saveClusterResultsFile,'clusterResults'); % uncomment while saving
+end
 
 catch ME
     fclose(fid);

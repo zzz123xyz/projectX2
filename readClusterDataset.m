@@ -29,7 +29,7 @@ else
     dataset_name = dataset_name_full(1:tmp(1)-1);
 end
 
-if ismember(dataset_name, {'NUS_lite', 'MSRCV1', 'AWA', 'ApAy', 'USAA'})
+if ismember(dataset_name, {'NUS_lite', 'MSRCV1', 'AWA', 'ApAy', 'USAA', 'USPS'})
     DatasetType = 1;
 elseif ismember(dataset_name, {'Cal7', 'Cal20', 'HW' ,'NUSWIDEOBJ', 'AWA4000','ApAy_MDR','AWA_MDR'})
     DatasetType = 2;
@@ -100,7 +100,8 @@ switch dataset_name
 
     case 'ApAy'
         
-        if strcmp(dataset_name_full, 'ApAy') %% Do I need to use the first part of the if section ???
+        if strcmp(dataset_name_full, 'ApAy')||~isempty(strfind(dataset_name_full,'ApAy_cnn'))
+            %% Do I need to use the first part of the if section ???
             [~, ~, Ytrn, Ytst] = ReadDataSetApAy;
             comp_data_file = ['../computed_data/feat_reduce_',dataset_name,'.mat'];
             load(comp_data_file); %load feat_trn_red, feat_tst_red
@@ -192,6 +193,18 @@ switch dataset_name
         k = numel(X0);
         [~, ~, Y, ~] = ReadDataSetAWA;
         
+    case 'USPS'
+        filepathname = '../usps/usps.xlsx';
+        tmp = xlsread(filepathname);
+        Ytrn = tmp(:,1);
+        Xtrn = tmp(:,3:2:end);
+        
+        filepathname = '../usps/usps_t.xlsx';
+        tmp = xlsread(filepathname);
+        Ytst = tmp(:,1);
+        Xtst = tmp(:,3:2:end);
+        X0 = [Xtrn',Xtst'];
+
 end
 
 %% ------------get label-----------
@@ -207,15 +220,24 @@ if size(label,2) >1
 end
 
 %% ------------normalization-----------
-[~, nc] = cellfun(@size, X0); 
-n = nc(1); clear nc;
-for i = 1:k
-  X{i} = (X0{i}-repmat(min(X0{i},[],2),1,n))./...
-  repmat(max(X0{i},[],2) - min(X0{i},[],2),1,n);
-  tmp = X{i}(~any(isnan(X{i}),2),:); %% there are a lot nan here in such as 6943 ?? what happens here
-  X{i} = tmp;
+if iscell(X0)
+    [~, nc] = cellfun(@size, X0);
+    n = nc(1); clear nc;
+    for i = 1:k
+        X{i} = (X0{i}-repmat(min(X0{i},[],2),1,n))./...
+            repmat(max(X0{i},[],2) - min(X0{i},[],2),1,n);
+        tmp = X{i}(~any(isnan(X{i}),2),:); %% there are a lot nan here in such as 6943 ?? what happens here
+        X{i} = tmp;
+    end
+else
+    n = size(X0, 2);
+    X{1} = (X0-repmat(min(X0,[],2),1,n))./...
+        repmat(max(X0,[],2) - min(X0,[],2),1,n);
+    tmp = X{1}(~any(isnan(X{1}),2),:); %% there are a lot nan here in such as 6943 ?? what happens here
+    X{1} = tmp;
 end
 data = X;
+
 
 %% old snippet for read classification data
 % c = size(Ytrn,2);

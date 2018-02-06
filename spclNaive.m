@@ -18,7 +18,7 @@ function [clusters, evalues, evectors] = spclNaive(data, nbclusters, varargin)
 % then the algorithm used for organizing eigenvectors:
 % 'np' - generally used for 2 clusters, one eigenvector must be used, if
 % will put positive values in class 1 and negative values in class 2
-% 'kmean' - a k-mean algorithm will be used to cluster the given eigenvectors
+% 'kmeans' - a k-mean algorithm will be used to cluster the given eigenvectors
 % 
 % finally an eigenvector choice can be added, it can be a vector [vmin
 % vmax] or a matrix defining several intervals. if not found the default
@@ -27,7 +27,7 @@ function [clusters, evalues, evectors] = spclNaive(data, nbclusters, varargin)
 
 plotchoices = {'bo','r+','md','k*','wv'};
 lapmatrixchoices = {'unormalized', 'sym', 'rw'};
-algochoices = {'np', 'kmean'};
+algochoices = {'np', 'kmeans'};
 func = 'gaussdist';
 count = 1;
 
@@ -146,7 +146,7 @@ sq_sum = sqrt(sum(newspace.*newspace, 2)) + 1e-20;
 newspace = newspace ./ repmat(sq_sum, 1, nbclusters);
 clear sq_sum V;
 
-if(strcmp(clusteralgo, 'kmean'))
+if(strcmp(clusteralgo, 'kmeans'))
     
     clusters = kmeans(newspace, nbclusters);
 else
