@@ -1,5 +1,5 @@
 function result = ClusteringMeasure(Y, predY)
-% result = [Jaccard, Ind];
+% result = [ACC MIhat Purity F1score RI Jaccard];
 
 if size(Y,2) ~= 1
     Y = Y';
@@ -61,12 +61,11 @@ ACC = length(find(Y == res))/length(Y);
 % NMI
 MIhat = MutualInfo(Y,res);
 
+[~,RI,~,~] = valid_RandIndex(Y, predY); % Rand Index
 
+Jaccard = valid_Jaccard(Y, predY); % Jaccard
 
-result = [ACC MIhat Purity F1score];
-
-
-
+result = [ACC MIhat Purity F1score RI Jaccard];
 
 
 %%
