@@ -875,6 +875,8 @@ try
             end
             
         elseif  strcmp(method, 'newMethodTest')
+            % newMethodTest is the combination of graph created by ULGC and
+            % the triditional clustering method SPCL
             clusterResults.newMethodTest = []; %initialize clusterResults.newMethodTest
             clusterResults.newMethodTestmeasure = {}; %initialize clusterResults.newMethodTestmeasure
             % the varible to record measuring results ACC NMI etc.
