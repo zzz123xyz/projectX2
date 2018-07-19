@@ -38,7 +38,7 @@ F = orth(rand(n,m));
 oobj1 = trace(F'*L*F);
 
 % modified obj
-mobj1 = trace(F'*L*G)+mu*norm(F-G,'fro');
+mobj1 = trace(F'*L*G)+mu*norm(F-G,'fro')^2;
 
 for i = 1:niters
     %% solve F fix G
@@ -55,7 +55,7 @@ for i = 1:niters
     
     % obj value
     oobj(i) = trace(F'*L*F);
-    mobj(i) = trace(F'*L*G)+mu*norm(F-G,'fro');
+    mobj(i) = trace(F'*L*G)+mu*norm(F-G,'fro')^2;
 end
 
 clusters = kmeans(F, m);

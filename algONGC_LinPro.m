@@ -1,19 +1,30 @@
-function [clusters, F, oobj, mobj] = algONGC(L, m, mu, iniMethod)
-%% algONGC function
-% used to compute orthogonal non-negative graph clustering 
-% min_{F'*F=I, G>=0}  trace(F'*L*G) + mu*trace(F-G)
+function [clusters, F, oobj, mobj] = algONGC(L, X, m, para, iniMethod)
+%% algONGC_LinPro function
+% used to compute orthogonal non-negative graph clustering with linear
+% projection term (which may improve the performance)
+% min_{F'*F=I, G>=0, W, b}  trace(F'*L*G) + mu*||F-G||^2_f + 
+% gamma*(||WtX + b1t-F||^2_f + etag||W||^2_f)
 
 % --- details --- (option)
 
 % --- version ---- (option)
 
 % --- Input ---
-% L: input graph R{m*m}
-% m: number of reduced dim (clusters)
-% mu: parameter
+% X: data matrix R(d*n)
+% H: centering matrix 
+% L: input graph R{n*n}
+% F: new representation R(c*n)
+% G: the intermediate coefficient in new form, replace F in some part R(c*n) 
+% W: projection matrix R(d*c)
+% b: bias R(c)
+% noneVec: 1(n)
+% gamma, mu, etag: all paras > 0
 
 % --- output ----
 % F: the new representation F
+% W: projection matrix R(d*c)
+% G
+% b
 
 % --- ref ---
 
@@ -30,12 +41,20 @@ eigv = [1 m];
 niters = 100;  % for converge analysis
 
 %% initialisation
+mu = para.mu;
+gamma = para.gamma;
+etag = para.etag;
+
 I = eye(size(L));
 n = size(L,1);
-L1 = L-2*mu*I; 
-eig_vec = eig(L1);
-alpha = max(eig_vec); %I want to obtain the value of alpha before 
-                      %the whole iteration procedure to save computation time cost
+d = size(X,1);
+oneNVec = ones(n,1);
+
+
+H = eye(n) - 1/n*(oneNVec*oneNVec');
+Lg = H - X'*pinv(X*X'+etag*eye(d));
+
+
 
 if strcmp(iniMethod, 'orth_random')
 % random initialisation
@@ -77,29 +96,40 @@ elseif strcmp(iniMethod, 'SPCL')
     G = F;
 end
   
+%% computation
 % original obj 
-oobj1 = trace(F'*L*F);
+oobj1 = trace(F'*L*F) + gamma*(norm(W*X+b*oneNVec-F,'fro')^2+etag*norm(W,'fro')^2);
 
 % modified obj
-mobj1 = trace(F'*L*G)+mu*norm(F-G,'fro')^2;
+mobj1 = trace(F'*L*G) + mu*norm(F-G,'fro')^2 + gamma*(norm(W*X+b*oneNVec-F,'fro')^2+etag*norm(W,'fro')^2);
 
 for i = 1:niters
     %% solve F fix G
-    M = ((alpha+eps)*I - L1)*G; % see the alpha part in initialization 
-%     M = ((alpha+10000*eps)*I - L1)*G; %for test
+    L1 = L*G-2*mu*G+gamma*G*Lg;
+    eig_vec = eig(L1);
+    alpha = max(eig_vec);
+    
+    M = (alpha+eps)*I - L1;
+    %     M = ((alpha+10000*eps)*I - L1)*G; %for test
     [U, S, V]=svd(M, 'econ');
     F = U*V';
     F_iter{i} = F;
     
     %% solve G fix F
-    P = 1/2*(1/mu*L'-2*I)*F;
+    P = 1/2*(1/mu*L'*F-2*F+gamma/mu*F*Lg);
     G = -P;
     G(G<0) = 0;
     G_iter{i} = G;
     
-    % obj value
+    %% solve W fix F, G, and b
+    W = pinv(X*X'+etag*eye(d))*X*F';
+    
+    %% solve b fix F, G, and W
+    b = 1/n*F*oneNVec;
+    
+    %% obj value
     oobj(i) = trace(F'*L*F);
-    mobj(i) = trace(F'*L*G)+mu*norm(F-G,'fro')^2;
+    mobj(i) = trace(F'*L*G)+mu*norm(F-G,'fro');
 end
 
 oobj = [oobj1,oobj];
