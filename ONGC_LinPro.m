@@ -20,9 +20,9 @@ addpath('ONGC')
 %ApAy_MDR1,ApAy_MDR2... ),ApAy_MDR_R01R01R005, A
 %'USAA','USAA_MDR_R005','UPSP', Cal20_cnn, Cal20_cnn_MDR512, ApAy_cnn_MDR512;
 % ApAy_trn_cnn_MDR512
-dataset_name = 'Cal20';
-featType = 'all'; % default : all
-nreps = 5; % parameter  default : 1
+dataset_name = 'ApAy_trn_cnn_MDR512';
+featType = '3'; % default : all
+nreps = 1; % parameter  default : 1
 clusterResults = struct;
 %bestClusterPara = getBestPara(dataset_name); % using best parameters if
 %there any, Use the chosen ones not always the best !!!
@@ -105,9 +105,12 @@ try
     if strcmp(paraMode,'grid')
         %mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5 ]; %default !!!! for HW??
         %mu_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100]; %new default !!!!
-        mu_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %default
-        gamma_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %default
-        etag_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %default
+%         mu_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %default
+%         gamma_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %default
+%         etag_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %default
+        mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
+        gamma_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
+        etag_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
         %mu_vec = [10];
     elseif strcmp(paraMode,'rand') % under construction***
         a = -2;
@@ -123,8 +126,7 @@ try
     fprintf(fid, 'p: %d \n\n', p);
     
     for j = 1:nratio
-        
-        %!!!!
+       
         if ~isempty(strfind(method,'ULGE'))
             % use ULGE graph
             m = round(spl_ratio(j)*nsample);
@@ -152,8 +154,8 @@ try
                     para.etag = etag_vec(t3);
                     
                     fprintf(fid, 'mu: %f \n', para.mu);
-                    fprintf(fid, 'mu: %f \n', para.gamma);
-                    fprintf(fid, 'mu: %f \n', para.etag);
+                    fprintf(fid, 'gamma: %f \n', para.gamma);
+                    fprintf(fid, 'etag: %f \n', para.etag);
                     
                     allResults = zeros(nreps,6);
                     allReps = [];
@@ -177,7 +179,7 @@ try
                             elseif exist('sigma','var')
                                 clusterBestResults.ONGC.para.sigma = sigma;
                             end
-                            clusterBestResults.ONGC.para.mu = mu;
+                            clusterBestResults.ONGC.para.mu = para.mu;
                         end
                     end
                     result = mean(allResults,1); % result is average result;
@@ -212,11 +214,11 @@ try
     
 catch ME
     fclose(fid);
-%     if exist('clusterBestResults','var')
-%         save(saveClusterResultsFile,'clusterResults','clusterBestResults'); % uncomment while saving
-%     else
-%         save(saveClusterResultsFile,'clusterResults'); % uncomment while saving
-%     end
+    if exist('clusterBestResults','var')
+        save(saveClusterResultsFile,'clusterResults','clusterBestResults'); % uncomment while saving
+    else
+        save(saveClusterResultsFile,'clusterResults'); % uncomment while saving
+    end
     
     rethrow(ME);
 end

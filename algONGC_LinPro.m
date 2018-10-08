@@ -1,4 +1,4 @@
-function [clusters, F, oobj, mobj] = algONGC(L, X, m, para, iniMethod)
+function [clusters, F, oobj, mobj] = algONGC_LinPro(L, X, m, para, iniMethod)
 %% algONGC_LinPro function
 % used to compute orthogonal non-negative graph clustering with linear
 % projection term (which may improve the performance)
@@ -37,8 +37,8 @@ lapmatrixchoice = 'sym';
 eigv = [1 m];
 
 %% iters setting !!!!
-%niters = 30;  % for usual case
-niters = 100;  % for converge analysis
+niters = 10;  % for usual case defualt 30
+% niters = 100;  % for converge analysis
 
 %% initialisation
 mu = para.mu;
@@ -49,17 +49,19 @@ I = eye(size(L));
 n = size(L,1);
 d = size(X,1);
 oneNVec = ones(n,1);
-
+W = rand(d,m);
+b = rand(m,1);
 
 H = eye(n) - 1/n*(oneNVec*oneNVec');
-Lg = H - X'*pinv(X*X'+etag*eye(d));
-
-
+Lg = H - X'*pinv(X*X'+etag*eye(d))*X;
+L1 = L-2*mu+gamma*Lg;  
+eigValue_vec = eig(L1);  
+alpha = max(eigValue_vec);
 
 if strcmp(iniMethod, 'orth_random')
 % random initialisation
-G = orth(rand(n,m));
-F = orth(rand(n,m));
+G = orth(rand(n,m))';
+F = orth(rand(n,m))';
 
 elseif strcmp(iniMethod, 'random')
 %% random initialisation
@@ -98,28 +100,25 @@ end
   
 %% computation
 % original obj 
-oobj1 = trace(F'*L*F) + gamma*(norm(W*X+b*oneNVec-F,'fro')^2+etag*norm(W,'fro')^2);
+oobj1 = trace(F*L*F') + gamma*(norm(W'*X+b*oneNVec'-F,'fro')^2+etag*norm(W,'fro')^2);
 
 % modified obj
-mobj1 = trace(F'*L*G) + mu*norm(F-G,'fro')^2 + gamma*(norm(W*X+b*oneNVec-F,'fro')^2+etag*norm(W,'fro')^2);
-
+mobj1 = trace(F*L*G') + mu*norm(F-G,'fro')^2 + gamma*(norm(W'*X+b*oneNVec'-F,'fro')^2+etag*norm(W,'fro')^2);
+oobj = zeros(1,niters);
+mobj = zeros(1,niters);
 for i = 1:niters
     %% solve F fix G
-    L1 = L*G-2*mu*G+gamma*G*Lg;
-    eig_vec = eig(L1);
-    alpha = max(eig_vec);
-    
-    M = (alpha+eps)*I - L1;
+    M = ((alpha+eps)*I - L1)*G';
     %     M = ((alpha+10000*eps)*I - L1)*G; %for test
     [U, S, V]=svd(M, 'econ');
-    F = U*V';
-    F_iter{i} = F;
+    F = V*U';
+%     F_iter{i} = F;
     
     %% solve G fix F
-    P = 1/2*(1/mu*L'*F-2*F+gamma/mu*F*Lg);
+    P = 1/2*(1/mu*F*L-2*F+gamma/mu*F*Lg);
     G = -P;
     G(G<0) = 0;
-    G_iter{i} = G;
+%     G_iter{i} = G;
     
     %% solve W fix F, G, and b
     W = pinv(X*X'+etag*eye(d))*X*F';
@@ -128,11 +127,11 @@ for i = 1:niters
     b = 1/n*F*oneNVec;
     
     %% obj value
-    oobj(i) = trace(F'*L*F);
-    mobj(i) = trace(F'*L*G)+mu*norm(F-G,'fro');
+    oobj(i) = trace(F*L*F') + gamma*(norm(W'*X+b*oneNVec'-F,'fro')^2+etag*norm(W,'fro')^2);
+    mobj(i) = trace(F*L*G') + mu*norm(F-G,'fro')^2 + gamma*(norm(W'*X+b*oneNVec'-F,'fro')^2+etag*norm(W,'fro')^2);
 end
 
 oobj = [oobj1,oobj];
 mobj = [mobj1,mobj];
 
-clusters = kmeans(F, m);
+clusters = kmeans(F', m);
