@@ -108,7 +108,7 @@ try
 %         mu_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %default
 %         gamma_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %default
 %         etag_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %default
-        mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
+        mu_vec = [10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
         gamma_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
         etag_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
         %mu_vec = [10];
@@ -159,28 +159,33 @@ try
                     
                     allResults = zeros(nreps,6);
                     allReps = [];
-                    for v = 1:nreps
-                        [clusters, F, oobj, mobj] = algONGC_LinPro(L, allData', nbclusters, para, iniMethod);
-                        % [clusters, F, oobj, mobj] = algONGC(L,round(nsample/2), mu, iniMethod);%for test
-                        clusterResults.ONGC = [clusterResults.ONGC, clusters];
-                        allReps = [allReps, clusters];
-                        
-                        %evaluation
-                        singleResult = ClusteringMeasure(label_ind, clusters);
-                        allResults(v,:) = singleResult;
-                        disp(num2str(singleResult))
-                        
-                        %obtain the clusters results from highest performance
-                        if mean(singleResult) > maxResult
-                            maxResult = mean(singleResult);
-                            clusterBestResults.ONGC.result = clusters;
-                            if exist('m','var')
-                                clusterBestResults.ONGC.para.m = m;
-                            elseif exist('sigma','var')
-                                clusterBestResults.ONGC.para.sigma = sigma;
+                    try
+                        for v = 1:nreps
+                            [clusters, F, oobj, mobj] = algONGC_LinPro(L, allData', nbclusters, para, iniMethod);
+                            % [clusters, F, oobj, mobj] = algONGC(L,round(nsample/2), mu, iniMethod);%for test
+                            clusterResults.ONGC = [clusterResults.ONGC, clusters];
+                            allReps = [allReps, clusters];
+                            
+                            %evaluation
+                            singleResult = ClusteringMeasure(label_ind, clusters);
+                            allResults(v,:) = singleResult;
+                            disp(num2str(singleResult))
+                            
+                            %obtain the clusters results from highest performance
+                            if mean(singleResult) > maxResult
+                                maxResult = mean(singleResult);
+                                clusterBestResults.ONGC.result = clusters;
+                                if exist('m','var')
+                                    clusterBestResults.ONGC.para.m = m;
+                                elseif exist('sigma','var')
+                                    clusterBestResults.ONGC.para.sigma = sigma;
+                                end
+                                clusterBestResults.ONGC.para.mu = para.mu;
                             end
-                            clusterBestResults.ONGC.para.mu = para.mu;
                         end
+                    catch
+                        warning('KMEANS does not accept complex data, the current parameters cannot be used, now continue with next parameteers');
+                        continue;
                     end
                     result = mean(allResults,1); % result is average result;
                     SEM = std(allResults, 0, 1)/sqrt(length(nreps));
