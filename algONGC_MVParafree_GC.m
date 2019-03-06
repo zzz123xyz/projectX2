@@ -1,4 +1,4 @@
-function [clusters, F, oobj, mobj] = algONGC_MVParafree(data, nbclusters, mu, method, param, iniMethod)
+function [clusters, F, oobj, mobj] = algONGC_MVParafree_GC(data, nbclusters, mu, method, param, iniMethod)
 %% algONGC_MVParafree function
 % used to compute orthogonal non-negative graph clustering with parameter
 % free method
@@ -30,8 +30,8 @@ lapmatrixchoice = 'sym'; %laplace matrix construction method. options: unormaliz
 eigv = [1 nbclusters];
 
 %% iters setting !!!!
-niters = 30;  % for usual case
-% niters = 100;  % for converge analysis
+% niters = 30;  % for usual case
+niters = 100;  % for converge analysis
 
 nV = numel(data); % the data is V views
 n = size(data{1},2); % the there n data ()
@@ -40,6 +40,7 @@ n = size(data{1},2); % the there n data ()
 alpha = ones(1, nV)*1/nV;
 
 %% construct graph or view
+A_norm = cell(1,6);
 for v = 1:nV
     X = data{v};
     
@@ -48,8 +49,8 @@ for v = 1:nV
     else
         paramOne = param(v);
     end
-    [A_norm{v}, paramOne] = constructGraph(X, nbclusters, method, paramOne);
-    
+    [A_norm{v}, ~] = constructGraph(X, nbclusters, method, paramOne);
+   
 %     [U_,S,~] = svd(A_norm{v}, 'econ');
 %     U = U_(:,  eigv(1,1)+1: eigv(1,2)+1);
 %     
@@ -96,67 +97,82 @@ end
   
 %% compute the obj first time
 % original obj 
-temp = cellfun(@(x) sqrt(trace(F'*x*F)), A_norm, 'UniformOutput', false);
-oobj1 = sum([temp{:}]);
+oobj1 = compute_original_obj(alpha, A_norm, F);
 
-% modified obj
-temp = cellfun(@(x) sqrt(trace(F'*x*G)), A_norm, 'UniformOutput', false);
-mobj1 = sum([temp{:}]) + mu*norm(F-G,'fro')^2;
-
-% modified with alpha obj
-temp = cellfun(@(x) trace(F'*x*G), A_norm, 'UniformOutput', false);
-maobj1 = sum(alpha.*[temp{:}]) + mu*norm(F-G,'fro')^2;
+% modified with obj
+mobj1 = compute_modified_obj(alpha, A_norm, F, G, mu);
 
 %% start the iterations
+G_iter = cell(1,niters);
+F_iter = cell(1,niters);
+oobj = zeros(1,niters);
+mobj = zeros(1,niters);
 for i = 1:niters
-    %% update the joint graph A according to the alpha
-    A = zeros(size(A_norm{1}));
-    for v = 1:nV
-        A = A + alpha(v)*A_norm{v}; %*****
-    end
-
-    %% initialisation of the iterations
-    I = eye(size(A));
-    n = size(A,1);
-    L1 = A-2*mu*I; 
-    eig_vec = eig(L1);
-    beta = max(eig_vec); %I want to obtain the value of beta before 
-                          %the whole iteration procedure to save computation time cost
-    
-    %% solve F fix G and alpha
-    M = ((beta+eps)*I - L1)*G; % see the alpha part in initialization 
+%     %% update the joint graph A according to the alpha
+%     A = zeros(size(A_norm{1}));
+%     for v = 1:nV
+%         A = A + alpha(v)*A_norm{v}; 
+%     end
+% 
+%     %% initialisation of the iterations
+%     I = eye(size(A));
+%     n = size(A,1);
+                          
+    %% solve G fix F and alpha
+    A_combine = compute_combined_graph(alpha, A_norm);
+    G = (A_combine*F+mu*F)/(1+mu);
+    G(G<0) = 0;
+    G_iter{i} = G;
+     
+    %% solve F fix G and alpha 
+    M = A_combine*G+mu*G; % see the alpha part in initialization 
 %     M = ((alpha+10000*eps)*I - L1)*G; %for test
     [U, S, V]=svd(M, 'econ');
     F = U*V';
     F_iter{i} = F;
-    
-    %% solve G fix F and alpha
-    tmp = zeros(size(A_norm{1}));
-    for v = 1:nV
-        tmp = tmp + alpha(v) * A_norm{v}; %*****
-    end
-    P = 1/2*(1/mu * tmp - 2*I)*F;
-    G = -P;
-    G(G<0) = 0;
-    G_iter{i} = G;
-    
+        
     %% solve alpha fix F and G
-    alpha = cellfun(@(x) 1/(2*sqrt(trace(F'*x*F))), A_norm, 'UniformOutput', false);
-    alpha = [alpha{:}]; 
-    
+    B = cell2mat(cellfun(@(x) x(:), A_norm, 'UniformOutput', false));
+    tmp = F*G';
+    C = tmp(:);
+    W = inv(B'*B);
+    Vv = B'*C;
+    One_v = ones(nV,1);
+    N = One_v'*W*One_v;
+    J = W*Vv+W*One_v/N-W*(One_v*One_v')*W/N;
+    J(J<0) = 0;
+    alpha = J;
+  
     % obj value
-    temp = cellfun(@(x) sqrt(trace(F'*x*F)), A_norm, 'UniformOutput', false);
-    oobj(i) = sum([temp{:}]);
-    
-    temp = cellfun(@(x) sqrt(trace(F'*x*G)), A_norm, 'UniformOutput', false);
-    mobj(i) = sum([temp{:}]) + mu*norm(F-G,'fro')^2;
-    
-    temp = cellfun(@(x) trace(F'*x*G), A_norm, 'UniformOutput', false);
-    maobj(i) = sum(alpha.*[temp{:}]) + mu*norm(F-G,'fro')^2;
+    oobj(i) = compute_original_obj(alpha, A_norm, F);
+    mobj(i) = compute_modified_obj(alpha, A_norm, F, G, mu);
+
 end
 
 oobj = [oobj1,oobj];
 mobj = [mobj1,mobj];
-maobj = [maobj1,maobj];
 
 clusters = kmeans(F, nbclusters);
+end
+
+function obj = compute_original_obj(alpha, A_norm, F)
+    A_combine = compute_combined_graph(alpha, A_norm);
+    nsample = size(A_combine, 1);
+    L = eye(nsample) - A_combine;
+    % simlilar to the setting in code ONGC_linPro graph construction the
+    % LA_norm is the laplacian matrix L in derivative
+    obj = trace(F'*L*F);
+end
+
+function obj = compute_modified_obj(alpha, A_norm, F, G, mu)
+    A_combine = compute_combined_graph(alpha, A_norm);
+    obj = norm(A_combine-F*G', 'fro') + mu * norm(F - G, 'fro');
+end
+
+function A_combine = compute_combined_graph(alpha, A_norm)
+    nV = numel(A_norm);
+    A_combine = zeros(size(A_norm{1}));
+    for i=1:nV
+        A_combine = A_combine + alpha(i)*A_norm{i};
+    end
+end

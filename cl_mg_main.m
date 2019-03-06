@@ -45,7 +45,7 @@ clusterResults = struct;
 %methods = {'ONGC_ULGE'};
 %ONGC with ULGE graph (default for ONGC, if no appendix after '_', they are in this case)
 %methods = {'newMethodTest'};
-methods = {'MVG','MVMG'};
+methods = {'MVG'};
 %methods = {'SPCL','MVSC','CLR'};
 
 %% ==== read dataset ====

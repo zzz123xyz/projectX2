@@ -69,3 +69,10 @@ switch LapMatrixChoice
         %A_norm{v} = eye(nbsamples) - (dmat^-1) * wmat;
         A = (dmat^-1) * wmat;
 end
+A = (A+A')/2; % make the constructed graph symmetric to avoid small 
+              % computational turbulence which cause symmetric elements
+                
+if ~isreal(A)
+    A = real(A);
+end
+
