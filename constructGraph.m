@@ -54,6 +54,9 @@ switch method
     case 'SelfTune'
         wmat = SelfTune(data, param);
         
+    case 'ULGE'  
+        [wmat, ~] = ULGE(data', param{:});
+        
 end
 
 dmat = diag(sum(wmat, 2));

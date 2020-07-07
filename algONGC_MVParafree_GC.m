@@ -1,8 +1,13 @@
 function [clusters, F, oobj, mobj] = algONGC_MVParafree_GC(data, nbclusters, mu, method, param, iniMethod)
-%% algONGC_MVParafree function
-% used to compute orthogonal non-negative graph clustering with parameter
-% free method
-% min_{F'*F=I, G>=0} \sum sqrt(trace(F'*L*G)) + mu*trace(F-G)
+%% algONGC_MVParafree_GC function
+% ---description---
+% algorithm orthognal non-negative graph clustering with multiview
+% parameter free (GC means graph clustering indicate the new version of 
+% graph clustering using parameter auto optimization technique not the sqrt 
+% optimization technique as the preivious idea in ONGC_LinPro_sqrt_multiview.docx)
+
+% min_{F'*F=I, G>=0, \alpha'*vec(1)=1, \alpha>=0 } \sum 
+% trace(sum(\alpha_v*A_v) - FG') + mu*trace(F-G)
 
 % --- details --- (option)
 
@@ -40,11 +45,13 @@ n = size(data{1},2); % the there n data ()
 alpha = ones(1, nV)*1/nV;
 
 %% construct graph or view
-A_norm = cell(1,6);
+A_norm = cell(1,nV);
 for v = 1:nV
     X = data{v};
     
     if isscalar(param)
+        paramOne = param;
+    elseif iscell(param) 
         paramOne = param;
     else
         paramOne = param(v);
@@ -166,7 +173,7 @@ end
 
 function obj = compute_modified_obj(alpha, A_norm, F, G, mu)
     A_combine = compute_combined_graph(alpha, A_norm);
-    obj = norm(A_combine-F*G', 'fro') + mu * norm(F - G, 'fro');
+    obj = norm(A_combine-F*G', 'fro')^2 + mu * norm(F - G, 'fro')^2;
 end
 
 function A_combine = compute_combined_graph(alpha, A_norm)

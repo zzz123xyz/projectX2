@@ -19,8 +19,8 @@ addpath('ONGC')
 %'HW',AWA4000,'ApAy','AWA_MDR','ApAy_MDR'(rename from
 %ApAy_MDR1,ApAy_MDR2... ),ApAy_MDR_R01R01R005, A
 %'USAA','USAA_MDR_R005','UPSP', Cal20_cnn, Cal20_cnn_MDR512, ApAy_cnn_MDR512;
-% ApAy_trn_cnn_MDR512
-dataset_name = 'Cal20';
+% ApAy_trn_cnn_MDR512, Coil20_cnn
+dataset_name = 'Coil20_cnn';
 featType = 'all'; % default : all
 nreps = 5; % parameter  default : 1
 clusterResults = struct;
@@ -29,7 +29,7 @@ clusterResults = struct;
 %saveClusterResultsFile = ['results\clusterResults_',dataset_name,'.mat'];
 
 %% ==== selecting methods ==== %!!!!
-%methods = {'kmeans'};
+% methods = {'kmeans'};
 %methods = {'kmeans','SPCLNaive'};
 %methods = {'kmeans','SPCL','SPCLNaive','MVSC','MMSC','MVCSS','MVG','CLR','MVMG'}; % default
 %methods = {'SPCL'}; % for single view
@@ -39,14 +39,15 @@ clusterResults = struct;
 %methods = {'kmeans','SPCL','SPCLNaive'};
 %methods = {'MVG', 'CLR', 'MVMG'};
 %methods = {'SPCL', 'MVSC', 'MVG', 'CLR', 'MVMG'}; %chosen
-%methods = {'MVCSS'};
+% methods = {'MMSC'};
+% methods = {'MVCSS'};
 %methods = {'ONGC'};
-%methods = {'ONGC_SPCL'}; %ONGC with gaussian graph
+methods = {'ONGC_SPCL'}; %ONGC with gaussian graph
 %methods = {'ONGC_ULGE'};
 %ONGC with ULGE graph (default for ONGC, if no appendix after '_', they are in this case)
 %methods = {'newMethodTest'};
-methods = {'MVG'};
-%methods = {'SPCL','MVSC','CLR'};
+% methods = {'MVG'};
+% methods = {'SPCL'};
 
 %% ==== read dataset ====
 if ~isempty(strfind(dataset_name,'cnn'))
@@ -354,7 +355,7 @@ try
             fprintf(fid, [method,'\n']);
             
             %% MMSC setting !!!
-            func = 'SelfTune';
+            func = 'SelfTune'; %default in Cai's paper
             %func = 'gaussdist';
             param = 10;  %in paper it's k=9 in P5, the first col is datapoints themselves
             %discrete_model = 'rotation';
@@ -785,15 +786,15 @@ try
             %spl_ratio = 0.04: 0.02: 0.2; %default !!!!
             %spl_ratio = 0.1: 0.02: 0.2; %default for msrcv1 !!!!
             %spl_ratio = 0.2: 0.02: 0.3; %test for the rest paras
-            spl_ratio = 0.04; %fog single test
+            spl_ratio = 0.04; %for single test
             nratio = numel(spl_ratio);
             iniMethod = 'orth_random'; % SPCL or random %initialisation method for ONGC
             paraMode = 'grid';
             
             if strcmp(paraMode,'grid')
-                %mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5 ]; %default !!!! for HW??
-                %mu_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100]; %new default !!!!
-                mu_vec = [1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %test for the rest paras
+%                 mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5 ]; %default !!!! for HW??
+                mu_vec = [10^-8, 10^-7, 10^-6, 10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %new default !!!!
+%                 mu_vec = [1000, 10^4, 10^5, 10^6, 10^7, 10^8]; %test for the rest paras
                 %mu_vec = [10];
             elseif strcmp(paraMode,'rand')
                 a = -2;

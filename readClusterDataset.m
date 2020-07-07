@@ -31,7 +31,8 @@ end
 
 if ismember(dataset_name, {'NUS_lite', 'MSRCV1', 'AWA', 'ApAy', 'USAA', 'USPS'})
     DatasetType = 1;
-elseif ismember(dataset_name, {'Cal7', 'Cal20', 'HW' ,'NUSWIDEOBJ', 'AWA4000','ApAy_MDR','AWA_MDR'})
+elseif ismember(dataset_name, {'Cal7', 'Cal20', 'HW' ,'NUSWIDEOBJ', 'AWA4000'...
+        ,'ApAy_MDR','AWA_MDR', 'Coil20', 'recommendationM', 'recommendationO'})
     DatasetType = 2;
 end
 
@@ -204,7 +205,39 @@ switch dataset_name
         Ytst = tmp(:,1);
         Xtst = tmp(:,3:2:end);
         X0 = [Xtrn',Xtst'];
-
+        
+    case 'Coil20'
+        filepathname = dir('../dataset_Large-Scale/new_dataset/coil-20-proc/*.png');
+        % get the path to the coil20 dataset
+        filepathname = extractfield(filepathname,'name');
+        Y = cellfun(@(x) x(strfind(x,'j')+1:strfind(x,'_')-1), filepathname, 'UniformOutput', false);
+        % use celfun to find the number between j and _ as the label 
+        % note the strfind(x,'_') only return the first index of '_'
+        Y = cellfun(@str2num, Y)';
+        
+    case 'recommendationM'
+        load('../dataset_Large-Scale/new_dataset/recommendation/musical_instrument/user.mat') %load user data
+        X0{1}=data;
+        load('../dataset_Large-Scale/new_dataset/recommendation/musical_instrument/item.mat') %load user data
+        X0{2}=data;
+        k = numel(X0);
+        
+        % synthesize a random integer label vector cuz there are no groudtruth label in this
+        % situation
+        nsample = size(data, 2);
+        Y = randi(10, 1, nsample)';
+        
+    case 'recommendationO'
+        load('../dataset_Large-Scale/new_dataset/recommendation/Office_Products/user.mat') %load user data
+        X0{1}=data;
+        load('../dataset_Large-Scale/new_dataset/recommendation/Office_Products/item.mat') %load user data
+        X0{2}=data;
+        k = numel(X0);
+        
+        % synthesize a random integer label vector cuz there are no groudtruth label in this
+        % situation
+        nsample = size(data, 2);
+        Y = randi(10, 1, nsample)';
 end
 
 %% ------------get label-----------
@@ -220,24 +253,27 @@ if size(label,2) >1
 end
 
 %% ------------normalization-----------
-if iscell(X0)
-    [~, nc] = cellfun(@size, X0);
-    n = nc(1); clear nc;
-    for i = 1:k
-        X{i} = (X0{i}-repmat(min(X0{i},[],2),1,n))./...
-            repmat(max(X0{i},[],2) - min(X0{i},[],2),1,n);
-        tmp = X{i}(~any(isnan(X{i}),2),:); %% there are a lot nan here in such as 6943 ?? what happens here
-        X{i} = tmp;
+if exist('X0', 'var')
+    if iscell(X0)
+        [~, nc] = cellfun(@size, X0);
+        n = nc(1); clear nc;
+        for i = 1:k
+            X{i} = (X0{i}-repmat(min(X0{i},[],2),1,n))./...
+                repmat(max(X0{i},[],2) - min(X0{i},[],2),1,n);
+            tmp = X{i}(~any(isnan(X{i}),2),:); %% there are a lot nan here in such as 6943 ?? what happens here
+            X{i} = tmp;
+        end
+    else
+        n = size(X0, 2);
+        X{1} = (X0-repmat(min(X0,[],2),1,n))./...
+            repmat(max(X0,[],2) - min(X0,[],2),1,n);
+        tmp = X{1}(~any(isnan(X{1}),2),:); %% there are a lot nan here in such as 6943 ?? what happens here
+        X{1} = tmp;
     end
-else
-    n = size(X0, 2);
-    X{1} = (X0-repmat(min(X0,[],2),1,n))./...
-        repmat(max(X0,[],2) - min(X0,[],2),1,n);
-    tmp = X{1}(~any(isnan(X{1}),2),:); %% there are a lot nan here in such as 6943 ?? what happens here
-    X{1} = tmp;
+    data = X;
+else 
+    data = [];
 end
-data = X;
-
 
 %% old snippet for read classification data
 % c = size(Ytrn,2);
