@@ -144,7 +144,9 @@ try
         %         gamma_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
         %         etag_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
 %         mu_vec = [10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
-          mu_vec = [10]; % converge test
+%           mu_vec = [10]; % converge test
+%           mu_vec = [10^-3]; % converge test
+          mu_vec = [10^3]; % converge test
     elseif strcmp(paraMode,'rand') % under construction***
         a = -2;
         b = 2;
