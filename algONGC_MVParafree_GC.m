@@ -146,7 +146,7 @@ for i = 1:niters
     Vv = B'*C;
     One_v = ones(nV,1);
     N = One_v'*W*One_v;
-    J = W*Vv+W*One_v/N-W*(One_v*One_v')*W/N;
+    J = W*Vv+W*One_v/N-W*(One_v*One_v')*W*Vv/N;
     J(J<0) = 0;
     alpha = J;
   
