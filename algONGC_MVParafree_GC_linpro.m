@@ -50,7 +50,16 @@ eigv = [1 nbclusters];
 niters = 100;  % for converge analysis
 
 nV = numel(data); % the data is V views
-n = size(data{1},2); % the there n data ()
+n = size(data{1},2); % there are n data samples
+[nD, ] = cellfun(@size, data);
+
+%% global constant
+global one_n;
+global nD_all;
+global H_const; % H constant
+one_n = ones(n,1);
+nD_all = sum(nD);
+H_const = eyes(n)-1/n*(one_n*one_n');
 
 %% initialize alpha
 alpha = ones(1, nV)*1/nV;
@@ -77,6 +86,8 @@ for v = 1:nV
     
     %F_v{v} = U;
 end
+data_concat = cellfun(@vertcat, data);  % concatnate the each view of data together 
+Lg = H_const-data_concat'*(data_concat*data_concat'+ita*eyes(nD_all))\data_concat;  
 
 %% initialize the F and G
 if strcmp(iniMethod, 'orth_random')
@@ -115,10 +126,10 @@ end
   
 %% compute the obj first time
 % original obj 
-oobj1 = compute_original_obj(alpha, A_norm, F);
+oobj1 = compute_original_SEC_obj(data_concat, alpha, A_norm, gamma, ita, F);
 
-% modified with obj
-mobj1 = compute_modified_obj(alpha, A_norm, F, G, mu);
+% % modified with obj
+% mobj1 = compute_modified_obj(alpha, A_norm, F, G, mu);
 
 %% start the iterations
 G_iter = cell(1,niters);
@@ -135,15 +146,17 @@ for i = 1:niters
 %     %% initialisation of the iterations
 %     I = eye(size(A));
 %     n = size(A,1);
-                          
+
+
     %% solve G fix F and alpha
     A_combine = compute_combined_graph(alpha, A_norm);
-    G = (A_combine*F+mu*F)/(1+mu);
+    Lo = A_combine - gamma*Lg;
+    G = (Lo*F+mu*F)/(1+mu);
     G(G<0) = 0;
     G_iter{i} = G;
      
     %% solve F fix G and alpha 
-    M = A_combine*G+mu*G; % see the alpha part in initialization 
+    M = Lo*G+mu*G; % see the alpha part in initialization 
 %     M = ((alpha+10000*eps)*I - L1)*G; %for test
     [U, S, V]=svd(M, 'econ');
     F = U*V';
@@ -153,36 +166,51 @@ for i = 1:niters
     B = cell2mat(cellfun(@(x) x(:), A_norm, 'UniformOutput', false));
     tmp = F*G';
     C = tmp(:);
-    W = inv(B'*B);
-    Vv = B'*C;
+    Lvg = Lg(:);
+    Cg = gamma*Lvg+C;
+    Vv = B'*Cg;
     One_v = ones(nV,1);
-    N = One_v'*W*One_v;
-    J = W*Vv+W*One_v/N-W*(One_v*One_v')*W/N;
+%     % use W, comment the 3 lines if using W is not stable in comupation 
+%     W = inv(B'*B);
+%     N = One_v'*W*One_v;
+%     J = W*Vv+W*One_v/N-W*(One_v*One_v')*W*Vv/N; 
+    % I missed to times a Vv on last term in algONGC_MVParafree_GC.m % !!!
+    
+    % use inv_W, comment the 3 lines if try using W above
+    inv_W = B'*B;
+    N = (One_v'/inv_W)*One_v;
+    J = inv_W\Vv+inv_W\One_v/N-(inv_W\(One_v*One_v')/W*Vn)/N;
+    
     J(J<0) = 0;
-    alpha = J;
+    alpha = J; % ???
   
     % obj value
-    oobj(i) = compute_original_obj(alpha, A_norm, F);
-    mobj(i) = compute_modified_obj(alpha, A_norm, F, G, mu);
+%     oobj(i) = compute_original_obj(alpha, A_norm, F);
+    oobj(i) = compute_original_SEC_obj(data_concat, alpha, A_norm, gamma, ita, F);
+%     mobj(i) = compute_modified_obj(alpha, A_norm, F, G, mu);
 
 end
 
 oobj = [oobj1,oobj];
-mobj = [mobj1,mobj];
+% mobj = [mobj1,mobj];
 
 clusters = kmeans(F, nbclusters);
 end
 
-function obj = compute_original_obj(alpha, A_norm, F, W, b)
-    A_combine = compute_combined_graph(alpha, A_norm); % ???
+function obj = compute_original_SEC_obj(X, alpha, A_norm, gamma, ita, F)
+    b = 1/n*F'*one_n;
+    W = (X*X'+ita*eyes(nD_all))\X*F;  % equ(14) in SEC paper
+    A_combine = compute_combined_graph(alpha, A_norm);
     nsample = size(A_combine, 1);
     L = eye(nsample) - A_combine;
     % simlilar to the setting in code ONGC_linPro graph construction the
     % LA_norm is the laplacian matrix L in derivative
-    obj = trace(F'*L*F);
+    obj = trace(F'*L*F) + ...
+        gamma*(norm(X'*W+one_n*b'-F, 'fro')^2+ita*trace(W'*W)); 
 end
 
 function obj = compute_modified_SEC_obj(alpha, A_norm, gamma, ita, mu, F, G)
+    b = 1/n*F'*one_n;
     A_combine = compute_combined_graph(alpha, A_norm);
     obj = norm(A_combine-F*G', 'fro')^2 + mu * norm(F - G, 'fro')^2;
 end
