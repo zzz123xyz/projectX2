@@ -51,7 +51,7 @@ niters = 100;  % for converge analysis
 
 nV = numel(data); % the data is V views
 n = size(data{1},2); % there are n data samples
-[nD, ] = cellfun(@size, data);
+[nD, ~] = cellfun(@size, data);
 
 %% global constant
 global one_n;
@@ -59,7 +59,7 @@ global nD_all;
 global H_const; % H constant
 one_n = ones(n,1);
 nD_all = sum(nD);
-H_const = eyes(n)-1/n*(one_n*one_n');
+H_const = eye(n)-1/n*(one_n*one_n');
 
 %% initialize alpha
 alpha = ones(1, nV)*1/nV;
@@ -86,8 +86,8 @@ for v = 1:nV
     
     %F_v{v} = U;
 end
-data_concat = cellfun(@vertcat, data);  % concatnate the each view of data together 
-Lg = H_const-data_concat'*(data_concat*data_concat'+ita*eyes(nD_all))\data_concat;  
+data_concat = vertcat(data{:});  % concatnate the each view of data together 
+Lg = H_const-data_concat'/(data_concat*data_concat'+ita*eye(nD_all))*data_concat;  
 
 %% initialize the F and G
 if strcmp(iniMethod, 'orth_random')
@@ -179,7 +179,7 @@ for i = 1:niters
     % use inv_W, comment the 3 lines if try using W above
     inv_W = B'*B;
     N = (One_v'/inv_W)*One_v;
-    J = inv_W\Vv+inv_W\One_v/N-(inv_W\(One_v*One_v')/W*Vn)/N;
+    J = inv_W\Vv+inv_W\One_v/N-(inv_W\(One_v*One_v')/inv_W*Vv)/N;
     
     J(J<0) = 0;
     alpha = J; % ???
@@ -198,8 +198,11 @@ clusters = kmeans(F, nbclusters);
 end
 
 function obj = compute_original_SEC_obj(X, alpha, A_norm, gamma, ita, F)
+    global one_n
+    global nD_all
+    n = size(X,2);
     b = 1/n*F'*one_n;
-    W = (X*X'+ita*eyes(nD_all))\X*F;  % equ(14) in SEC paper
+    W = (X*X'+ita*eye(nD_all))\X*F;  % equ(14) in SEC paper
     A_combine = compute_combined_graph(alpha, A_norm);
     nsample = size(A_combine, 1);
     L = eye(nsample) - A_combine;

@@ -147,6 +147,8 @@ try
 %           mu_vec = [10]; % converge test
 %           mu_vec = [10^-3]; % converge test
           mu_vec = [10^3]; % converge test
+          ita = 1;
+          gamma = 1;
     elseif strcmp(paraMode,'rand') % under construction***
         a = -2;
         b = 2;
@@ -163,7 +165,9 @@ try
         allReps = [];
         for v = 1:nreps
             tic
-            [clusters, F, oobj, mobj] = algONGC_MVParafree_GC(data, nbclusters, mu, graphmethod, m, iniMethod);
+%             [clusters, F, oobj, mobj] = algONGC_MVParafree_GC(data, nbclusters, mu, graphmethod, m, iniMethod);
+            [clusters, F, oobj, mobj] = algONGC_MVParafree_GC_linpro(data, nbclusters, gamma, ita, mu, graphmethod, m, iniMethod);
+            %% ***** need to incoporate the iters of ita gamma in algONGC_MVParafree_GC_linpro
             toc
             % [clusters, F, oobj, mobj] = algONGC(L,round(nsample/2), mu, iniMethod);%for test
             clusterResults.ONGC = [clusterResults.ONGC, clusters];
@@ -184,8 +188,6 @@ try
         result = mean(allResults,1); % result is average result;
         SEM = std(allResults, 0, 1)/sqrt(length(nreps));
         
-        disp(['ACC, MIhat, Purity, F1score, RI, Jaccard: ',num2str(result),...
-            ' SEM: ',num2str(SEM),'\n\n']);
         %fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
         fprintf(fid, ['ACC, MIhat, Purity, F1score, RI, Jaccard: ',num2str(result),...
             ' SEM: ',num2str(SEM),'\n\n']);
@@ -194,7 +196,6 @@ try
         clusterResults.ONGCresult = [clusterResults.ONGCresult; {allReps}];
         % record measuring results ACC NMI etc for all trials, the result of each
         % parameter setting is in one cell
-        
     end
     
     fclose(fid);
