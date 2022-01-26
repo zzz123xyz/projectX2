@@ -1,18 +1,18 @@
 clear
 clc
 
-addpath('..\semantic_metrics');
-addpath('..\NCestimation_V2');
-addpath('..\gadget');
+addpath(fullfile('..','semantic_metrics'));
+addpath(fullfile('..','NCestimation_V2'));
+addpath(fullfile('..','gadget'));
 %addpath('..\Project_X\code')
-addpath(genpath('..\Project_CLR\CLR_code'))
-addpath('..\project_MVSC')
-addpath('..\project_MMSC')
-addpath('..\project_MVCSS')
-addpath('..\clustering_eval_kun')
-addpath('..\ApAy_dataset')
-addpath('..\Animals_with_Attributes')
-addpath('ONGC')
+addpath(genpath(fullfile('..','Project_CLR','CLR_code')));
+addpath(fullfile('..','project_MVSC'));
+addpath(fullfile('..','project_MMSC'));
+addpath(fullfile('..','project_MVCSS'));
+addpath(fullfile('..','clustering_eval_kun'));
+addpath(fullfile('..','ApAy_dataset'));
+addpath(fullfile('..','Animals_with_Attributes'));
+addpath(fullfile('ONGC'));
 
 %% ==== dataset and global para ==== %!!!!
 %dataset_name = 'MSRCV1'; %'AWA','MSRCV1','NUSWIDEOBJ','Cal7','Cal20',

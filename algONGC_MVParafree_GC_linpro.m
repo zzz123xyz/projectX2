@@ -1,5 +1,5 @@
 
-function [clusters, F, oobj, mobj] = algONGC_MVParafree_GC_linpro...
+function [clusters, F, oobj, mobj, varargout] = algONGC_MVParafree_GC_linpro...
     (data, nbclusters, gamma, ita, mu, method, param, iniMethod)
 %% algONGC_MVParafree_GC_linpro function
 % ---description---
@@ -186,7 +186,7 @@ for i = 1:niters
   
     % obj value
 %     oobj(i) = compute_original_obj(alpha, A_norm, F);
-    oobj(i) = compute_original_SEC_obj(data_concat, alpha, A_norm, gamma, ita, F);
+    [oobj(i), w, b, A_combine] = compute_original_SEC_obj(data_concat, alpha, A_norm, gamma, ita, F);
 %     mobj(i) = compute_modified_obj(alpha, A_norm, F, G, mu);
 
 end
@@ -194,15 +194,20 @@ end
 oobj = [oobj1,oobj];
 % mobj = [mobj1,mobj];
 
-clusters = kmeans(F, nbclusters);
+clusters = kmeans(F, nbclusters); %finally I also need to use kmeans
+% to discretize the cluster assigments, I can also use the spectral rotate from "Spectral Embedded Clustering: A Framework for
+% In-Sample and Out-of-Sample Spectral Clustering" and "Multiclass Spectral
+% Clustering"*****
+% try a switch to choose which clustering method to use here (kmeans or spectral rotate****)
+varargout{1} = w; varargout{2} = b; varargout{3} = A_combine;
 end
 
-function obj = compute_original_SEC_obj(X, alpha, A_norm, gamma, ita, F)
+function [obj, varargout] = compute_original_SEC_obj(X, alpha, A_norm, gamma, ita, F)
     global one_n
     global nD_all
     n = size(X,2);
-    b = 1/n*F'*one_n;
-    W = (X*X'+ita*eye(nD_all))\X*F;  % equ(14) in SEC paper
+    b = 1/n*F'*one_n;  % output to linpro_OOS
+    W = (X*X'+ita*eye(nD_all))\X*F;  % equ(14) in SEC paper % output to linpro_OOS 
     A_combine = compute_combined_graph(alpha, A_norm);
     nsample = size(A_combine, 1);
     L = eye(nsample) - A_combine;
@@ -210,6 +215,7 @@ function obj = compute_original_SEC_obj(X, alpha, A_norm, gamma, ita, F)
     % LA_norm is the laplacian matrix L in derivative
     obj = trace(F'*L*F) + ...
         gamma*(norm(X'*W+one_n*b'-F, 'fro')^2+ita*trace(W'*W)); 
+    varargout{1} = W; varargout{2} = b; varargout{3} = A_combine;
 end
 
 function obj = compute_modified_SEC_obj(alpha, A_norm, gamma, ita, mu, F, G)

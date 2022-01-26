@@ -1,18 +1,18 @@
 clear
 clc
 
-addpath('..\semantic_metrics');
-addpath('..\NCestimation_V2');
-addpath('..\gadget');
+addpath(fullfile('..','semantic_metrics'));
+addpath(fullfile('..','NCestimation_V2'));
+addpath(fullfile('..','gadget'));
 %addpath('..\Project_X\code')
-addpath(genpath('..\Project_CLR\CLR_code'))
-addpath('..\project_MVSC')
-addpath('..\project_MMSC')
-addpath('..\project_MVCSS')
-addpath('..\clustering_eval_kun')
-addpath('..\ApAy_dataset')
-addpath('..\Animals_with_Attributes')
-addpath('ONGC')
+addpath(genpath(fullfile('..','Project_CLR','CLR_code')));
+addpath(fullfile('..','project_MVSC'));
+addpath(fullfile('..','project_MMSC'));
+addpath(fullfile('..','project_MVCSS'));
+addpath(fullfile('..','clustering_eval_kun'));
+addpath(fullfile('..','ApAy_dataset'));
+addpath(fullfile('..','Animals_with_Attributes'));
+addpath(fullfile('ONGC'));
 
 %% ==== dataset and global para ==== %!!!!
 %dataset_name = 'MSRCV1'; %'AWA','MSRCV1','NUSWIDEOBJ','Cal7','Cal20',
@@ -24,7 +24,7 @@ addpath('ONGC')
 % Coil20_cnn
 % recommendationM
 % recommendationO
-dataset_name = 'Cal20';
+dataset_name = 'Cal20_cnn';
 featType = 'all'; % default : all
 nreps = 1; % parameter  default : 1, usually 10
 clusterResults = struct;
@@ -55,7 +55,8 @@ nsample = size(allData,1);
 nbclusters = numel(unique(label_ind));  %nbclusters =  7,
 
 %% ==== selecting methods ==== %!!!!
-method = mfilename; %ONGC with gaussian graph
+% method = mfilename; %ONGC with gaussian graph
+method = 'algONGC_MVParafree_GC_linpro'; %ONGC with gaussian graph
 %method = 'ONGC_LinPro_km_SPCL';
 %method = {'ONGC_LinPro_ULGE'};
 %ONGC with ULGE graph (default for ONGC, if no appendix after '_', they are in this case)
@@ -146,58 +147,109 @@ try
 %         mu_vec = [10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; %for efficiency
 %           mu_vec = [10]; % converge test
 %           mu_vec = [10^-3]; % converge test
-          mu_vec = [10^3]; % converge test
-          ita = 1;
-          gamma = 1;
+          mu_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5]; % converge test
+          gamma_vec = [10^-5, 10^-4, 10^-3, 10^-2, 10^-1, 1, 10, 100, 1000, 10^4, 10^5];
+          ita_vec = [10^-5, 10^-4, 10^-3, 10^-2];
     elseif strcmp(paraMode,'rand') % under construction***
         a = -2;
         b = 2;
         nmu = 20;
         mu_vec = 10.^((b-a).*rand(nmu,1) + a);
     end
-    %% ======
-    for t1 = 1:numel(mu_vec)
-        mu = mu_vec(t1);
-        
-        fprintf(fid, 'mu: %f \n', mu);
-        
-        allResults = zeros(nreps,6);
-        allReps = [];
-        for v = 1:nreps
-            tic
-%             [clusters, F, oobj, mobj] = algONGC_MVParafree_GC(data, nbclusters, mu, graphmethod, m, iniMethod);
-            [clusters, F, oobj, mobj] = algONGC_MVParafree_GC_linpro(data, nbclusters, gamma, ita, mu, graphmethod, m, iniMethod);
-            %% ***** need to incoporate the iters of ita gamma in algONGC_MVParafree_GC_linpro
-            toc
-            % [clusters, F, oobj, mobj] = algONGC(L,round(nsample/2), mu, iniMethod);%for test
-            clusterResults.ONGC = [clusterResults.ONGC, clusters];
-            allReps = [allReps, clusters];
+    %% ===== method algONGC_MVParafree_GC
+    if strcmp(method,'algONGC_MVParafree_GC')
+        for t1 = 1:numel(mu_vec)
+            mu = mu_vec(t1);
             
-            %evaluation
-            singleResult = ClusteringMeasure(label_ind, clusters);
-            allResults(v,:) = singleResult;
-            disp(num2str(singleResult))
+            fprintf(fid, 'mu: %f \n', mu);
             
-            %obtain the clusters results from highest performance
-            if mean(singleResult) > maxResult
-                maxResult = mean(singleResult);
-                clusterBestResults.ONGC.result = clusters;
-                clusterBestResults.ONGC.para.mu = mu;
+            allResults = zeros(nreps,6);
+            allReps = [];
+            for v = 1:nreps
+                tic
+                [clusters, F, oobj, mobj] = algONGC_MVParafree_GC(data, nbclusters, mu, graphmethod, m, iniMethod);
+                toc
+                % [clusters, F, oobj, mobj] = algONGC(L,round(nsample/2), mu, iniMethod);%for test
+                clusterResults.ONGC = [clusterResults.ONGC, clusters];
+                allReps = [allReps, clusters];
+                
+                %evaluation
+                singleResult = ClusteringMeasure(label_ind, clusters);
+                allResults(v,:) = singleResult;
+                disp(num2str(singleResult))
+                
+                %obtain the clusters results from highest performance
+                if mean(singleResult) > maxResult
+                    maxResult = mean(singleResult);
+                    clusterBestResults.ONGC.result = clusters;
+                    clusterBestResults.ONGC.para.mu = mu;
+                end
+            end
+            result = mean(allResults,1); % result is average result;
+            SEM = std(allResults, 0, 1)/sqrt(length(nreps));
+            
+            %fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
+            fprintf(fid, ['ACC, MIhat, Purity, F1score, RI, Jaccard: ',num2str(result),...
+                ' SEM: ',num2str(SEM),'\n\n']);
+            
+            clusterResults.ONGCmeasure = [clusterResults.ONGCmeasure; {allResults}];
+            clusterResults.ONGCresult = [clusterResults.ONGCresult; {allReps}];
+            % record measuring results ACC NMI etc for all trials, the result of each
+            % parameter setting is in one cell
+        end
+    %% ===== method algONGC_MVParafree_GC_linpro
+    elseif strcmp(method,'algONGC_MVParafree_GC_linpro')
+        for t1 = 1:numel(mu_vec)
+            mu = mu_vec(t1);
+            fprintf(fid, 'mu: %f \n', mu);
+            
+            for t2 = 1:numel(gamma_vec)
+                gamma = gamma_vec(t2);
+                fprintf(fid, 'gamma: %f \n', gamma);
+                
+                for t3 = 1:numel(ita_vec)
+                    ita = ita_vec(t3);
+                    fprintf(fid, 'ita: %f \n', ita);
+                    
+                    allResults = zeros(nreps,6);
+                    allReps = [];
+                    for v = 1:nreps
+                        tic
+                        [clusters, F, oobj, mobj] = algONGC_MVParafree_GC_linpro(data, nbclusters, gamma, ita, mu, graphmethod, m, iniMethod);
+                        toc
+                        % [clusters, F, oobj, mobj] = algONGC(L,round(nsample/2), mu, iniMethod);%for test
+                        clusterResults.ONGC = [clusterResults.ONGC, clusters];
+                        allReps = [allReps, clusters];
+                        
+                        %evaluation
+                        singleResult = ClusteringMeasure(label_ind, clusters);
+                        allResults(v,:) = singleResult;
+                        disp(num2str(singleResult))
+                        
+                        %obtain the clusters results from highest performance
+                        if mean(singleResult) > maxResult
+                            maxResult = mean(singleResult);
+                            clusterBestResults.ONGC.result = clusters;
+                            clusterBestResults.ONGC.para.mu = mu;
+                            clusterBestResults.ONGC.para.gamma = gamma;
+                            clusterBestResults.ONGC.para.ita = ita;
+                        end
+                    end
+                    result = mean(allResults,1); % result is average result;
+                    SEM = std(allResults, 0, 1)/sqrt(length(nreps));
+                    
+                    %fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
+                    fprintf(fid, ['ACC, MIhat, Purity, F1score, RI, Jaccard: ',num2str(result),...
+                        ' SEM: ',num2str(SEM),'\n\n']);
+                    
+                    clusterResults.ONGCmeasure = [clusterResults.ONGCmeasure; {allResults}];
+                    clusterResults.ONGCresult = [clusterResults.ONGCresult; {allReps}];
+                    % record measuring results ACC NMI etc for all trials, the result of each
+                    % parameter setting is in one cell
+                end
             end
         end
-        result = mean(allResults,1); % result is average result;
-        SEM = std(allResults, 0, 1)/sqrt(length(nreps));
-        
-        %fprintf(fid, ['ACC, MIhat, Purity, F1score: ',num2str(result),'\n\n']);
-        fprintf(fid, ['ACC, MIhat, Purity, F1score, RI, Jaccard: ',num2str(result),...
-            ' SEM: ',num2str(SEM),'\n\n']);
-        
-        clusterResults.ONGCmeasure = [clusterResults.ONGCmeasure; {allResults}];
-        clusterResults.ONGCresult = [clusterResults.ONGCresult; {allReps}];
-        % record measuring results ACC NMI etc for all trials, the result of each
-        % parameter setting is in one cell
     end
-    
     fclose(fid);
     
     if exist('clusterBestResults','var')
